@@ -46,4 +46,5 @@
 #video-client {
   border: black 1px solid;
   border-radius: 10px;
+  transform: scale(-1, 1);
 }
