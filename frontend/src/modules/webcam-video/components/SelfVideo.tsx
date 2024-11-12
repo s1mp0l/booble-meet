@@ -30,6 +30,7 @@ const SelfVideo = memo(() => {
   return (
     <video
       ref={videoRef}
+      className={"webcam-video"}
       id="webcam-video-client"
       height={360}
       width={640}

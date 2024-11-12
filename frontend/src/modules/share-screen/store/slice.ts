@@ -10,7 +10,7 @@ const initialSlice: ISharedScreenSlice = {
 };
 
 const sharedScreenSlice = createSlice({
-  name: 'SharedScreen',
+  name: 'sharedScreen',
   initialState: initialSlice,
   reducers: {
     setSharedScreen: (state, action: PayloadAction<MediaStream | null>) => {

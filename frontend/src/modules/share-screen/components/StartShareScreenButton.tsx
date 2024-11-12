@@ -1,8 +1,8 @@
 import {memo, useCallback} from "react";
-import {Button} from "antd";
 import {useAppDispatch, useAppSelector} from "../../../store/hooks.ts";
 import {getSelfSharedScreen} from "../utils/getSelfSharedScreen.ts";
 import {selectSelfSharedScreenStream, setSharedScreen} from "../store/slice.ts";
+import {Button} from "antd";
 
 const StartShareScreenButton = memo(() => {
   const dispatch = useAppDispatch();
@@ -31,11 +31,13 @@ const StartShareScreenButton = memo(() => {
     },
     [dispatch, onStreamInactiveHandler, streamFromStore]
   );
-
+  
   return (
     <Button
       onClick={changeShare}
-      color={streamFromStore ? "danger" : "primary"}
+      type={"primary"}
+      danger={!!streamFromStore}
+      variant={"solid"}
     >
       {streamFromStore ? "Stop sharing" : "Share screen"}
     </Button>

@@ -2,17 +2,17 @@ import './App.css'
 import './Variables.css'
 import {Provider} from 'react-redux';
 import {store} from "../store";
-import {ConfigProvider, Flex, Space, theme} from "antd";
+import {ConfigProvider, Flex} from "antd";
 import Layout, {Content, Header} from "antd/lib/layout/layout";
 import {ShareScreenVideo} from "../modules/share-screen/components/ShareScreenVideo.tsx";
 import {SelfVideo} from "../modules/webcam-video/components/SelfVideo.tsx";
 import {CommonControls} from "./CommonControls.tsx";
+import {RecordedVideo} from "../modules/recorder/components/RecordedVideo.tsx";
 
 function App() {
   return (
     <ConfigProvider
       theme={{
-        algorithm: theme.defaultAlgorithm,
         cssVar: true,
       }}
     >
@@ -26,12 +26,15 @@ function App() {
               style={{height: "100%", width: "100%"}}
               align={"center"}
               justify={"center"}
+              gap={32}
             >
-              <Space>
+              <Flex wrap={true} gap={16} align={"center"} justify={"center"}>
                 <SelfVideo/>
 
                 <ShareScreenVideo/>
-              </Space>
+
+                <RecordedVideo/>
+              </Flex>
 
               <CommonControls/>
             </Flex>

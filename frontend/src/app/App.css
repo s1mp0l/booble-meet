@@ -47,6 +47,8 @@ video {
   background: var(--default-bg);
   border: var(--default-border);
   overflow: hidden;
-  
+}
+
+.webcam-video {
   transform: scale(-1, 1);
 }

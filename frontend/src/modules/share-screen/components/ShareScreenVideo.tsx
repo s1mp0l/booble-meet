@@ -13,8 +13,6 @@ const ShareScreenVideo = memo(() => {
     }
   }, [mediaStream]);
 
-  console.log(mediaStream);
-
   if (!mediaStream) {
     return null;
   }
