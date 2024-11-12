@@ -1,8 +1,7 @@
 #root {
-  max-width: 1280px;
+  width: 100dvw;
+  height: 100dvh;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
 }
 
 .logo {
@@ -43,8 +42,11 @@
   color: #888;
 }
 
-#video-client {
-  border: black 1px solid;
-  border-radius: 10px;
+video {
+  border-radius: var(--default-border-radius);
+  background: var(--default-bg);
+  border: var(--default-border);
+  overflow: hidden;
+  
   transform: scale(-1, 1);
 }

@@ -37,12 +37,16 @@ const SelectDeviceBase = memo<ISelectDeviceBase>(({
     dispatch(setActiveDeviceActionCreator(value));
   }
 
+  const defaultOption = options[0]?.value ?? null;
+  const value = activeOption?.value ?? defaultOption
+
   return (
     <Select
       style={{
-        minWidth: 200
+        minWidth: 100,
+        maxWidth: 200
       }}
-      value={activeOption?.value}
+      value={value}
       options={options}
       onChange={onChange}
     />
