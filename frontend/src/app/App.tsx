@@ -24,10 +24,10 @@ function App() {
           <Content>
             <Flex
               vertical
-              style={{height: "100%", width: "100%"}}
+              style={{height: "100%", width: "100%", padding: 16}}
               align={"center"}
               justify={"center"}
-              gap={32}
+              gap={16}
             >
               <VideoGrid>
                 <SelfVideo index={0}/>
