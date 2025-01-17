@@ -8,6 +8,7 @@ import {ShareScreenVideo} from "../modules/share-screen/components/ShareScreenVi
 import {SelfVideo} from "../modules/webcam-video/components/SelfVideo.tsx";
 import {CommonControls} from "./CommonControls.tsx";
 import {RecordedVideo} from "../modules/recorder/components/RecordedVideo.tsx";
+import {FaceDetectionCanvas} from "../modules/face-detection/components/FaceDetectionCanvas.tsx";
 
 function App() {
   return (
@@ -31,9 +32,11 @@ function App() {
               <Flex wrap={true} gap={16} align={"center"} justify={"center"}>
                 <SelfVideo/>
 
-                <ShareScreenVideo/>
+                <FaceDetectionCanvas/>
 
-                <RecordedVideo/>
+                {/* <ShareScreenVideo/>
+
+                <RecordedVideo/> */}
               </Flex>
 
               <CommonControls/>
