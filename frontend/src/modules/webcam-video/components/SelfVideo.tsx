@@ -6,12 +6,17 @@ import {selectSelfWebCamVideoStream, setWebCamVideoStream} from "../store/slice.
 import {getDevices} from "../../devices/utils/getDevices.ts";
 import {FaceDetectionCanvas} from "../../face-detection/components/FaceDetectionCanvas.tsx";
 import {Button} from "antd";
+import {IWithIndex} from "../../layout/model/constants.ts";
+import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
 
-const SelfVideo = memo(() => {
+const SelfVideo = memo<IWithIndex>(({index}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const {width, height} = useVideoGridItemSize(index);
+
   const dispatch = useAppDispatch();
   const devices = useAppSelector(selectAllActiveDevices);
-  const constraints = useMemo(() => getConstraints(devices), [devices]);
+  const constraints = useMemo(() => getConstraints(devices, width, height), [devices, height, width]);
+
   const [isBackgroundBlurEnabled, setIsBackgroundBlurEnabled] = useState(false);
 
   const videoStream = useAppSelector(selectSelfWebCamVideoStream);
@@ -63,34 +68,37 @@ const SelfVideo = memo(() => {
   }, []);
 
   return (
-    <div>
+    <div style={{position: 'relative'}}>
       <Button
         onClick={toggleBackgroundBlur}
         type={"primary"}
         danger={isBackgroundBlurEnabled}
         variant={"solid"}
-        style={{marginBottom: '10px'}}
+        style={{
+          position: 'absolute',
+          top: 10,
+          left: 10,
+          zIndex: 1
+        }}
       >
         {isBackgroundBlurEnabled ? 'Отключить размытие фона' : 'Включить размытие фона'}
       </Button>
 
-      <div style={{position: 'relative'}}>
-        <video
-          ref={videoRef}
-          className="webcam-video"
-          id="webcam-video-client"
-          height={360}
-          width={640}
-          autoPlay
-          playsInline
-          style={{
-            visibility: isBackgroundBlurEnabled ? 'hidden' : 'visible',
-            position: isBackgroundBlurEnabled ? 'absolute' : 'relative'
-          }}
-        />
+      <video
+        ref={videoRef}
+        className="webcam-video"
+        id="webcam-video-client"
+        height={height}
+        width={width}
+        autoPlay
+        playsInline
+        style={{
+          visibility: isBackgroundBlurEnabled ? 'hidden' : 'visible',
+          position: 'absolute'
+        }}
+      />
 
-        {isBackgroundBlurEnabled ? <FaceDetectionCanvas videoRef={videoRef}/> : null}
-      </div>
+      {isBackgroundBlurEnabled ? <FaceDetectionCanvas videoRef={videoRef} index={index}/> : null}
     </div>
   )
 })

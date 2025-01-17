@@ -8,6 +8,7 @@ import {ShareScreenVideo} from "../modules/share-screen/components/ShareScreenVi
 import {SelfVideo} from "../modules/webcam-video/components/SelfVideo.tsx";
 import {CommonControls} from "./CommonControls.tsx";
 import {RecordedVideo} from "../modules/recorder/components/RecordedVideo.tsx";
+import { VideoGrid } from '../modules/layout/components/VideoGrid.tsx';
 
 function App() {
   return (
@@ -28,13 +29,13 @@ function App() {
               justify={"center"}
               gap={32}
             >
-              <Flex wrap={true} gap={16} align={"center"} justify={"center"}>
-                <SelfVideo/>
+              <VideoGrid>
+                <SelfVideo index={0}/>
 
-                <ShareScreenVideo/>
+                <ShareScreenVideo index={1}/>
 
-                <RecordedVideo/>
-              </Flex>
+                <RecordedVideo index={2}/>
+              </VideoGrid>
 
               <CommonControls/>
             </Flex>

@@ -1,20 +1,23 @@
-import {memo, RefObject, useRef, useState} from "react";
+import {memo, RefObject, useRef} from "react";
 import '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
 import {useSegmentation} from "../hooks/useSegmentation.ts";
+import { IWithIndex } from "../../layout/model/constants.ts";
+import { useVideoGridItemSize } from "../../layout/context/VideoGridContext.ts";
 
-interface FaceDetectionCanvasProps {
+interface FaceDetectionCanvasProps extends IWithIndex {
   videoRef: RefObject<HTMLVideoElement>;
 }
 
-const FaceDetectionCanvas = memo(({videoRef}: FaceDetectionCanvasProps) => {
+const FaceDetectionCanvas = memo(({videoRef, index}: FaceDetectionCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [dimensions] = useState({width: 640, height: 360});
   const {isModelLoaded, error} = useSegmentation({
     videoRef,
     canvasRef,
     fps: 30
   });
+
+  const {width, height} = useVideoGridItemSize(index);
 
   return (
     <>
@@ -35,8 +38,8 @@ const FaceDetectionCanvas = memo(({videoRef}: FaceDetectionCanvasProps) => {
       )}
       <canvas
         ref={canvasRef}
-        width={dimensions.width}
-        height={dimensions.height}
+        width={width}
+        height={height}
         className="webcam-video"
         style={{
           width: '100%',

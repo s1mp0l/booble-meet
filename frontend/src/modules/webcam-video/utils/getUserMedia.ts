@@ -9,8 +9,7 @@ const DEFAULT_CONSTRAINTS: MediaStreamConstraints = {
   video: true,
 }
 
-const getConstraints = (devices: IActiveDevicesSelected): MediaStreamConstraints => ({
-  ...DEFAULT_CONSTRAINTS,
+const getConstraints = (devices: IActiveDevicesSelected, width?: number, height?: number): MediaStreamConstraints => ({
   audio: devices.audioInput
     ? {
       deviceId: {exact: devices.audioInput.deviceId}
@@ -18,11 +17,14 @@ const getConstraints = (devices: IActiveDevicesSelected): MediaStreamConstraints
     : true,
   video: devices.video
     ? {
-      width: 1280,
-      height: 720,
+      width: width ?? 1920,
+      height: height ?? 1080,
       deviceId: {exact: devices.video.deviceId}
     }
-    : true,
+    : {
+      width: width ?? 1920,
+      height: height ?? 1080,
+    },
 });
 
 const getUserMedia = async (constraints?: MediaStreamConstraints) => {
