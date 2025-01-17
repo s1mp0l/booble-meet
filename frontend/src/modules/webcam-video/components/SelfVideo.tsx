@@ -1,15 +1,18 @@
-import {memo, useCallback, useEffect, useMemo, useRef} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../../store/hooks.ts";
 import {selectAllActiveDevices, setDevices} from "../../devices/store/slice.ts";
 import {getConstraints, getUserMedia} from "../utils/getUserMedia.ts";
 import {selectSelfWebCamVideoStream, setWebCamVideoStream} from "../store/slice.ts";
 import {getDevices} from "../../devices/utils/getDevices.ts";
+import {FaceDetectionCanvas} from "../../face-detection/components/FaceDetectionCanvas.tsx";
+import {Button} from "antd";
 
 const SelfVideo = memo(() => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const dispatch = useAppDispatch();
   const devices = useAppSelector(selectAllActiveDevices);
   const constraints = useMemo(() => getConstraints(devices), [devices]);
+  const [isBackgroundBlurEnabled, setIsBackgroundBlurEnabled] = useState(false);
 
   const videoStream = useAppSelector(selectSelfWebCamVideoStream);
 
@@ -55,16 +58,40 @@ const SelfVideo = memo(() => {
     })();
   }, [dispatch]);
 
+  const toggleBackgroundBlur = useCallback(() => {
+    setIsBackgroundBlurEnabled(prev => !prev);
+  }, []);
+
   return (
-    <video
-      ref={videoRef}
-      className={"webcam-video"}
-      id="webcam-video-client"
-      height={360}
-      width={640}
-      autoPlay
-      playsInline
-    />
+    <div>
+      <Button
+        onClick={toggleBackgroundBlur}
+        type={"primary"}
+        danger={isBackgroundBlurEnabled}
+        variant={"solid"}
+        style={{marginBottom: '10px'}}
+      >
+        {isBackgroundBlurEnabled ? 'Отключить размытие фона' : 'Включить размытие фона'}
+      </Button>
+
+      <div style={{position: 'relative'}}>
+        <video
+          ref={videoRef}
+          className="webcam-video"
+          id="webcam-video-client"
+          height={360}
+          width={640}
+          autoPlay
+          playsInline
+          style={{
+            visibility: isBackgroundBlurEnabled ? 'hidden' : 'visible',
+            position: isBackgroundBlurEnabled ? 'absolute' : 'relative'
+          }}
+        />
+
+        {isBackgroundBlurEnabled ? <FaceDetectionCanvas videoRef={videoRef}/> : null}
+      </div>
+    </div>
   )
 })
 SelfVideo.displayName = "SelfVideo";
