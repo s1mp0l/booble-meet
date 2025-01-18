@@ -42,9 +42,12 @@ const FaceDetectionCanvas = memo(({videoRef, index}: FaceDetectionCanvasProps) =
         height={height}
         className="webcam-video"
         style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover'
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+          objectFit: 'cover',
+          zIndex: 100
         }}
       />
     </>

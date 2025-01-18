@@ -8,6 +8,7 @@ import {FaceDetectionCanvas} from "../../face-detection/components/FaceDetection
 import {Button} from "antd";
 import {IWithIndex} from "../../layout/model/constants.ts";
 import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
+import { FaceMeshCanvas } from "../../face-detection/components/FaceMeshCanvas.tsx";
 
 const SelfVideo = memo<IWithIndex>(({index}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -84,21 +85,25 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
         {isBackgroundBlurEnabled ? 'Отключить размытие фона' : 'Включить размытие фона'}
       </Button>
 
-      <video
-        ref={videoRef}
-        className="webcam-video"
-        id="webcam-video-client"
-        height={height}
-        width={width}
-        autoPlay
-        playsInline
-        style={{
-          visibility: isBackgroundBlurEnabled ? 'hidden' : 'visible',
-          position: 'absolute'
-        }}
-      />
+      <div style={{transform: 'scale(-1, 1)'}}>
+        <video
+          ref={videoRef}
+          className="webcam-video"
+          id="webcam-video-client"
+          height={height}
+          width={width}
+          autoPlay
+          playsInline
+          style={{
+            visibility: isBackgroundBlurEnabled ? 'hidden' : 'visible',
+            position: 'absolute'
+          }}
+        />
 
-      {isBackgroundBlurEnabled ? <FaceDetectionCanvas videoRef={videoRef} index={index}/> : null}
+        {isBackgroundBlurEnabled ? <FaceDetectionCanvas videoRef={videoRef} index={index}/> : null}
+
+        <FaceMeshCanvas videoRef={videoRef} index={index} />
+      </div>
     </div>
   )
 })
