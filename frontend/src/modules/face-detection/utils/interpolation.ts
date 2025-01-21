@@ -20,7 +20,45 @@ export const smoothPosition = (current: Point, prev: Point | null, smoothingFact
   if (!prev) return current;
   
   return {
-    x: lerp(current.x, prev.x, smoothingFactor),
-    y: lerp(current.y, prev.y, smoothingFactor)
+    x: lerp(prev.x, current.x, smoothingFactor),
+    y: lerp(prev.y, current.y, smoothingFactor)
   };
+};
+
+export const smoothRotation = (
+  currentAngle: number,
+  previousAngle: number | null,
+  smoothingFactor: number
+): number => {
+  if (previousAngle === null) {
+    return currentAngle;
+  }
+
+  // Нормализуем разницу углов в диапазон [-π, π]
+  let angleDiff = currentAngle - previousAngle;
+  while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+  while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+
+  // Применяем сглаживание к разнице углов
+  const smoothedDiff = lerp(0, angleDiff, smoothingFactor);
+  
+  return previousAngle + smoothedDiff;
+};
+
+/**
+ * Плавная интерполяция размера
+ * @param currentScale Текущий размер
+ * @param previousScale Предыдущий размер
+ * @param smoothingFactor Коэффициент сглаживания (0-1)
+ */
+export const smoothScale = (
+  currentScale: number,
+  previousScale: number | null,
+  smoothingFactor: number
+): number => {
+  if (previousScale === null) {
+    return currentScale;
+  }
+
+  return lerp(previousScale, currentScale, smoothingFactor);
 }; 

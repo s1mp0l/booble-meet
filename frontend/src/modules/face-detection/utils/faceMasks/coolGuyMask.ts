@@ -1,17 +1,14 @@
 import * as faceDetection from '@tensorflow-models/face-detection';
-import {Point, MaskDrawerOptions} from '../model/types';
-import {smoothPosition} from './interpolation';
-import {loadImage as loadImageUtil} from './loadImage';
-import {drawRotatedImage} from './canvas';
-import {getRotationAngle} from './animation';
+import {Point, MaskDrawerOptions} from '../../model/types';
+import {smoothPosition} from '../interpolation';
+import {loadImage as loadImageUtil} from '../loadImage';
+import {drawRotatedImage} from '../canvas';
 
-// Функция для создания маски с глазами
-export const createEyeMaskDrawer = (
-  eyeImageSrc: string,
+export const createCoolGuyMask = (
+  imageSrc: string,
   options: MaskDrawerOptions = {}
 ) => {
-  let eyeImage: HTMLImageElement | null = null;
-  const startTime = Date.now();
+  let glassesImage: HTMLImageElement | null = null;
   
   // Сохраняем предыдущие позиции глаз для интерполяции
   let prevLeftEye: Point | null = null;
@@ -20,16 +17,15 @@ export const createEyeMaskDrawer = (
   // Применяем параметры с значениями по умолчанию
   const {
     smoothingFactor = 0.5,
-    animationDuration = 1000,
-    scale = 0.7
+    scale = 3 // Увеличенный масштаб, чтобы очки покрывали оба глаза
   } = options;
 
   // Загружаем изображение при первом вызове
   const ensureImageLoaded = async () => {
-    if (!eyeImage) {
-      eyeImage = await loadImageUtil(eyeImageSrc);
+    if (!glassesImage) {
+      glassesImage = await loadImageUtil(imageSrc);
     }
-    return eyeImage;
+    return glassesImage;
   };
 
   return async (
@@ -55,30 +51,29 @@ export const createEyeMaskDrawer = (
       prevLeftEye = leftEye;
       prevRightEye = rightEye;
 
-      // Вычисляем размер глаза на основе сглаженных позиций
+      // Вычисляем центр между глазами и размер очков
+      const centerX = (leftEye.x + rightEye.x) / 2;
+      const centerY = (leftEye.y + rightEye.y) / 2;
       const eyeDistance = Math.sqrt(
         Math.pow(rightEye.x - leftEye.x, 2) + Math.pow(rightEye.y - leftEye.y, 2)
       );
-      const eyeSize = eyeDistance * scale;
-      const rotationAngle = getRotationAngle(startTime, animationDuration);
+      
+      // Размер очков зависит от расстояния между глазами
+      const glassesWidth = eyeDistance * scale;
+      const glassesHeight = glassesWidth * (img.height / img.width); // Сохраняем пропорции изображения
 
-      // Рисуем глаза с использованием сглаженных позиций
+      // Вычисляем угол наклона между глазами и добавляем 180 градусов для корректной ориентации
+      const angle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) + Math.PI;
+
+      // Рисуем очки с центром между глазами
       drawRotatedImage(
         ctx,
         img,
-        leftEye.x,
-        leftEye.y,
-        eyeSize,
-        rotationAngle
-      );
-
-      drawRotatedImage(
-        ctx,
-        img,
-        rightEye.x,
-        rightEye.y,
-        eyeSize,
-        -rotationAngle
+        centerX,
+        centerY,
+        glassesWidth,
+        angle,
+        glassesHeight
       );
     }
   };

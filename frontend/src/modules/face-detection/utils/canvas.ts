@@ -6,8 +6,9 @@ export const drawRotatedImage = (
   img: HTMLImageElement,
   x: number,
   y: number,
-  size: number,
-  angle: number
+  width: number,
+  angle: number,
+  height?: number // Опциональная высота, если нужны разные размеры
 ) => {
   ctx.save();
   
@@ -18,8 +19,15 @@ export const drawRotatedImage = (
   ctx.rotate(angle);
   
   // Рисуем изображение с центром в точке вращения
-  const halfSize = size / 2;
-  ctx.drawImage(img, -halfSize, -halfSize, size, size);
+  const halfWidth = width / 2;
+  const halfHeight = (height ?? width) / 2;
+  ctx.drawImage(
+    img,
+    -halfWidth,
+    -halfHeight,
+    width,
+    height ?? width
+  );
   
   ctx.restore();
 }; 
