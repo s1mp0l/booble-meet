@@ -4,7 +4,7 @@ import {GAP, LayoutType} from '../model/constants.ts';
 import {VideoGridContext} from '../context/VideoGridContext.ts';
 
 interface VideoGridProps {
-  children: ReactNode[];
+  children: (ReactNode | null | undefined)[];
   layoutType?: LayoutType;
   className?: string;
   style?: CSSProperties;
@@ -16,8 +16,18 @@ export const VideoGrid = memo(({
   className,
   style
 }: VideoGridProps) => {
+  // Создаем маппинг реальных индексов к индексам валидных элементов
+  const indexMap = new Map<number, number>();
+  const validChildren = children
+    .map((child, index) => ({child, originalIndex: index}))
+    .filter(({child}) => child != null)
+    .map(({child, originalIndex}, validIndex) => {
+      indexMap.set(originalIndex, validIndex);
+      return child;
+    });
+  
   const {items, columns, rows} = useGridItemDimensions({
-    itemCount: children.length,
+    itemCount: validChildren.length,
     layoutType
   });
 
@@ -27,7 +37,8 @@ export const VideoGrid = memo(({
         items,
         columns,
         rows,
-        layoutType
+        layoutType,
+        indexMap
       }}
     >
       <div
@@ -41,7 +52,7 @@ export const VideoGrid = memo(({
           ...style
         }}
       >
-        {children.map((child, index) => (
+        {validChildren.map((child, index) => (
           <div
             key={index}
             style={{

@@ -17,11 +17,6 @@ interface UseGridItemDimensionsProps {
   layoutType: LayoutType;
 }
 
-// Округляем до ближайшего четного числа
-const roundToEven = (num: number): number => {
-  return Math.round(num / 2) * 2;
-};
-
 const calculateAspectRatioFit = (
   containerWidth: number,
   containerHeight: number,
@@ -31,13 +26,13 @@ const calculateAspectRatioFit = (
   
   if (containerRatio > targetRatio) {
     // Контейнер шире - начинаем с высоты
-    const height = roundToEven(containerHeight);
-    const width = roundToEven(height * targetRatio);
+    const height = Math.floor(containerHeight);
+    const width = Math.floor(height * targetRatio);
     return {width, height};
   } else {
     // Контейнер уже - начинаем с ширины
-    const width = roundToEven(containerWidth);
-    const height = roundToEven(width / targetRatio);
+    const width = Math.floor(containerWidth);
+    const height = Math.floor(width / targetRatio);
     return {width, height};
   }
 };
@@ -50,13 +45,13 @@ export const useGridItemDimensions = ({
 
   return useMemo(() => {
     // Вычисляем доступное пространство с учетом меню и отступов
-    const availableWidth = windowWidth - (CONTAINER_PADDINGS * 2);
-    const availableHeight = windowHeight - HEADER_MENU_HEIGHT - BOTTOM_MENU_HEIGHT - (CONTAINER_PADDINGS * 2);
+    const availableWidth = Math.floor(windowWidth - (CONTAINER_PADDINGS * 2));
+    const availableHeight = Math.floor(windowHeight - HEADER_MENU_HEIGHT - BOTTOM_MENU_HEIGHT - (CONTAINER_PADDINGS * 2));
 
     if (layoutType === LayoutType.SPOTLIGHT && itemCount > 1) {
       // Для лейаута с одним большим элементом
-      const spotlightContainerWidth = Math.min((availableWidth - GAP) * 0.7, MAX_CARD_WIDTH);
-      const spotlightContainerHeight = availableHeight - 2 * GAP;
+      const spotlightContainerWidth = Math.floor(Math.min((availableWidth - GAP) * 0.7, MAX_CARD_WIDTH));
+      const spotlightContainerHeight = Math.floor(availableHeight - 2 * GAP);
       
       const spotlight = calculateAspectRatioFit(
         spotlightContainerWidth,
@@ -64,8 +59,8 @@ export const useGridItemDimensions = ({
         ASPECT_RATIO
       );
 
-      const smallItemsContainerWidth = availableWidth - spotlight.width - 3 * GAP;
-      const smallItemContainerHeight = (availableHeight - ((itemCount - 2) * GAP)) / (itemCount - 1);
+      const smallItemsContainerWidth = Math.floor(availableWidth - spotlight.width - 3 * GAP);
+      const smallItemContainerHeight = Math.floor((availableHeight - ((itemCount - 2) * GAP)) / (itemCount - 1));
       
       const smallItem = calculateAspectRatioFit(
         smallItemsContainerWidth,
@@ -88,8 +83,8 @@ export const useGridItemDimensions = ({
       const rows = Math.ceil(itemCount / columns);
 
       // Вычисляем размеры контейнера для каждого элемента
-      const itemContainerWidth = (availableWidth - ((columns - 1) * GAP)) / columns;
-      const itemContainerHeight = (availableHeight - ((rows - 1) * GAP)) / rows;
+      const itemContainerWidth = Math.floor((availableWidth - ((columns - 1) * GAP)) / columns);
+      const itemContainerHeight = Math.floor((availableHeight - ((rows - 1) * GAP)) / rows);
 
       const item = calculateAspectRatioFit(
         itemContainerWidth,

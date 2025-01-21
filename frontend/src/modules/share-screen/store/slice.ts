@@ -20,6 +20,7 @@ const sharedScreenSlice = createSlice({
 })
 
 export const selectSelfSharedScreenStream = (state: RootState) => state.sharedScreen.selfSharedScreenStream;
+export const selectIsActiveSelfSharedScreen = (state: RootState) => !!selectSelfSharedScreenStream(state);
 
 export const {
   setSharedScreen,

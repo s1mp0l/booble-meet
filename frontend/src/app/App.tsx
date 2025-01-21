@@ -4,11 +4,8 @@ import {Provider} from 'react-redux';
 import {store} from "../store";
 import {ConfigProvider, Flex} from "antd";
 import Layout, {Content, Header} from "antd/lib/layout/layout";
-import {ShareScreenVideo} from "../modules/share-screen/components/ShareScreenVideo.tsx";
-import {SelfVideo} from "../modules/webcam-video/components/SelfVideo.tsx";
 import {CommonControls} from "./CommonControls.tsx";
-import {RecordedVideo} from "../modules/recorder/components/RecordedVideo.tsx";
-import { VideoGrid } from '../modules/layout/components/VideoGrid.tsx';
+import { VideosLayout } from './VideosLayout.tsx';
 
 function App() {
   return (
@@ -29,13 +26,7 @@ function App() {
               justify={"center"}
               gap={16}
             >
-              <VideoGrid>
-                <SelfVideo index={0}/>
-
-                <ShareScreenVideo index={1}/>
-
-                <RecordedVideo index={2}/>
-              </VideoGrid>
+              <VideosLayout />
 
               <CommonControls/>
             </Flex>

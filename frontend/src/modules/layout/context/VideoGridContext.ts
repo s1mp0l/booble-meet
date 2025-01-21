@@ -6,6 +6,7 @@ interface VideoGridContextValue {
   columns: number;
   rows: number;
   layoutType: 'spotlight' | 'grid';
+  indexMap: Map<number, number>;
 }
 
 export const VideoGridContext = createContext<VideoGridContextValue | null>(null);
@@ -19,9 +20,12 @@ export const useVideoGridContext = () => {
 };
 
 export const useVideoGridItemSize = (index: number): ItemDimensions => {
-  const {items} = useVideoGridContext();
-  if (!items[index]) {
+  const {items, indexMap} = useVideoGridContext();
+  const validIndex = indexMap.get(index);
+  
+  if (validIndex === undefined || !items[validIndex]) {
     throw new Error(`No item found at index ${index}`);
   }
-  return items[index];
+  
+  return items[validIndex];
 }; 

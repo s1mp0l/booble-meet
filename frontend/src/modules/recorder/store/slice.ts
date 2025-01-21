@@ -90,6 +90,7 @@ const recorderSlice = createSlice({
 
 export const selectRecordedVideos = (state: RootState) => state.recorder.recordedVideos;
 export const selectRecorderIsRecording = (state: RootState) => !!state.recorder.mediaRecorder;
+export const selectHaveRecordedVideos = (state: RootState) => state.recorder.recordedVideos.length > 0;
 
 export const {
   setRecorderStopRecording,
