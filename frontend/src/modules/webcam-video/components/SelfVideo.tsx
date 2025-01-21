@@ -69,7 +69,7 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
   }, []);
 
   return (
-    <div style={{position: 'relative'}}>
+    <div style={{position: 'relative',  height: '100%'}}>
       <Button
         onClick={toggleBackgroundBlur}
         type={"primary"}
@@ -85,7 +85,7 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
         {isBackgroundBlurEnabled ? 'Отключить размытие фона' : 'Включить размытие фона'}
       </Button>
 
-      <div style={{transform: 'scale(-1, 1)'}}>
+      <div style={{ transform: 'scale(-1, 1)', height: '100%' }}>
         <video
           ref={videoRef}
           className="webcam-video"

@@ -26,7 +26,7 @@ const BodySegmentationCanvas = memo(({videoRef, index}: BodySegmentationCanvasPr
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: 'translate(-50%, -50%)',
+          transform: 'scale(-1, 1)',
           color: 'white',
           background: 'rgba(0,0,0,0.7)',
           padding: '10px 20px',
