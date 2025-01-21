@@ -29,14 +29,18 @@ const getConstraints = (devices: IActiveDevicesSelected, width?: number, height?
 
 const getUserMedia = async (constraints?: MediaStreamConstraints) => {
   try {
-    const finalConstraints = {
-      ...DEFAULT_CONSTRAINTS,
-      constraints
-    };
+    const finalConstraints = constraints || DEFAULT_CONSTRAINTS;
 
     return await navigator.mediaDevices.getUserMedia(finalConstraints);
   } catch (err) {
-    console.log(err);
+    console.error('Ошибка доступа к медиа устройствам:', err);
+    if (err instanceof DOMException) {
+      if (err.name === 'NotAllowedError') {
+        console.error('Пользователь отказал в доступе к камере/микрофону');
+      } else if (err.name === 'NotFoundError') {
+        console.error('Камера или микрофон не найдены');
+      }
+    }
     return null;
   }
 }

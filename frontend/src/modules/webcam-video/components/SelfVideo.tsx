@@ -13,6 +13,7 @@ import {FaceMeshCanvas} from "../../face-detection/components/FaceMeshCanvas.tsx
 const SelfVideo = memo<IWithIndex>(({index}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const {width, height} = useVideoGridItemSize(index);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   const dispatch = useAppDispatch();
   const devices = useAppSelector(selectAllActiveDevices);
@@ -32,10 +33,17 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
 
   const startWebCamVideo = useCallback(() => {
       (async () => {
-        const mediaStream = await getUserMedia(constraints);
+        try {
+          const mediaStream = await getUserMedia(constraints);
 
-        if (mediaStream) {
-          dispatch(setWebCamVideoStream(mediaStream));
+          if (mediaStream) {
+            dispatch(setWebCamVideoStream(mediaStream));
+            setCameraError(null);
+          } else {
+            setCameraError('Не удалось получить доступ к камере');
+          }
+        } catch {
+          setCameraError('Ошибка при запросе доступа к камере');
         }
       })()
     },
@@ -70,6 +78,29 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
 
   return (
     <div style={{position: 'relative',  height: '100%'}}>
+      {cameraError && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(0,0,0,0.7)',
+          color: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          zIndex: 2,
+          textAlign: 'center'
+        }}>
+          {cameraError}
+          <Button 
+            onClick={startWebCamVideo}
+            type="primary"
+            style={{marginTop: '10px', display: 'block', width: '100%'}}
+          >
+            Повторить попытку
+          </Button>
+        </div>
+      )}
       <Button
         onClick={toggleBackgroundBlur}
         type={"primary"}

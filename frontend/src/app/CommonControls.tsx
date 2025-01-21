@@ -3,11 +3,14 @@ import {Flex, Space} from "antd";
 import {ShareScreenControls} from "../modules/share-screen/components/ShareScreenControls.tsx";
 import {SelfVideoControls} from "../modules/webcam-video/components/SelfVideoControls.tsx";
 import {RecorderControls} from "../modules/recorder/components/RecorderControls.tsx";
+import { useIsMobile } from "../modules/layout/hooks/useIsMobile.ts";
 
 const CommonControls = memo(() => {
+  const isMobile = useIsMobile();
+
   return (
     <Flex vertical gap={8} align={"center"}>
-      <SelfVideoControls/>
+      {isMobile ? null : <SelfVideoControls/>}
 
       <Space>
         <ShareScreenControls/>

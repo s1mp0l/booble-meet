@@ -34,3 +34,6 @@ yarn-error.log*
 /.idea/modules.xml
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/vcs.xml
+
+# Vite temporary config files
+frontend/vite.config.ts.timestamp-*
