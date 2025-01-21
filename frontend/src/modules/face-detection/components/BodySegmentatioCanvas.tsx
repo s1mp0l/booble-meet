@@ -2,14 +2,14 @@ import {memo, RefObject, useRef} from "react";
 import '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
 import {useSegmentation} from "../hooks/useSegmentation.ts";
-import { IWithIndex } from "../../layout/model/constants.ts";
-import { useVideoGridItemSize } from "../../layout/context/VideoGridContext.ts";
+import {IWithIndex} from "../../layout/model/constants.ts";
+import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
 
-interface FaceDetectionCanvasProps extends IWithIndex {
+interface BodySegmentationCanvasProps extends IWithIndex {
   videoRef: RefObject<HTMLVideoElement>;
 }
 
-const FaceDetectionCanvas = memo(({videoRef, index}: FaceDetectionCanvasProps) => {
+const BodySegmentationCanvas = memo(({videoRef, index}: BodySegmentationCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const {isModelLoaded, error} = useSegmentation({
     videoRef,
@@ -46,16 +46,15 @@ const FaceDetectionCanvas = memo(({videoRef, index}: FaceDetectionCanvasProps) =
           top: 0,
           left: 0,
           pointerEvents: 'none',
-          objectFit: 'cover',
-          zIndex: 100
+          objectFit: 'cover'
         }}
       />
     </>
   );
 });
 
-FaceDetectionCanvas.displayName = "FaceDetectionCanvas";
+BodySegmentationCanvas.displayName = "BodySegmentationCanvas";
 
 export {
-  FaceDetectionCanvas
+  BodySegmentationCanvas
 }

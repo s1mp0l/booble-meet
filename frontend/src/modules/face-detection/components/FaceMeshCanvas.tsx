@@ -13,7 +13,6 @@ const FaceMeshCanvas = memo(({videoRef, index}: FaceMeshCanvasProps) => {
     videoRef,
     canvasRef,
     fps: 30,
-    minDetectionConfidence: 0.5
   });
 
   const {width, height} = useVideoGridItemSize(index);
@@ -32,7 +31,8 @@ const FaceMeshCanvas = memo(({videoRef, index}: FaceMeshCanvasProps) => {
         top: 0,
         left: 0,
         pointerEvents: 'none',
-        objectFit: 'cover'
+        objectFit: 'cover',
+        zIndex: 100
       }}
     />
   );

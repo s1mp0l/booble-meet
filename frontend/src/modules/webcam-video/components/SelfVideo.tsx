@@ -4,11 +4,11 @@ import {selectAllActiveDevices, setDevices} from "../../devices/store/slice.ts";
 import {getConstraints, getUserMedia} from "../utils/getUserMedia.ts";
 import {selectSelfWebCamVideoStream, setWebCamVideoStream} from "../store/slice.ts";
 import {getDevices} from "../../devices/utils/getDevices.ts";
-import {FaceDetectionCanvas} from "../../face-detection/components/FaceDetectionCanvas.tsx";
+import {BodySegmentationCanvas} from "../../face-detection/components/BodySegmentatioCanvas.tsx";
 import {Button} from "antd";
 import {IWithIndex} from "../../layout/model/constants.ts";
 import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
-import { FaceMeshCanvas } from "../../face-detection/components/FaceMeshCanvas.tsx";
+import {FaceMeshCanvas} from "../../face-detection/components/FaceMeshCanvas.tsx";
 
 const SelfVideo = memo<IWithIndex>(({index}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -100,9 +100,9 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
           }}
         />
 
-        {isBackgroundBlurEnabled ? <FaceDetectionCanvas videoRef={videoRef} index={index}/> : null}
+        {isBackgroundBlurEnabled ? <BodySegmentationCanvas videoRef={videoRef} index={index}/> : null}
 
-        <FaceMeshCanvas videoRef={videoRef} index={index} />
+        <FaceMeshCanvas videoRef={videoRef} index={index}/>
       </div>
     </div>
   )
