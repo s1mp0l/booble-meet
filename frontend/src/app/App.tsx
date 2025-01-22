@@ -2,10 +2,11 @@ import './App.css'
 import './Variables.css'
 import {Provider} from 'react-redux';
 import {store} from "../store";
-import {ConfigProvider, Flex} from "antd";
-import Layout, {Content, Header} from "antd/lib/layout/layout";
-import {CommonControls} from "./CommonControls.tsx";
-import { VideosLayout } from './VideosLayout.tsx';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { CreateConference } from '../modules/conference/components/CreateConference';
+import { JoinConference } from '../modules/conference/components/JoinConference';
+import { Conference } from '../modules/conference/components/Conference';
+import { ConfigProvider } from 'antd';
 
 function App() {
   return (
@@ -15,23 +16,14 @@ function App() {
       }}
     >
       <Provider store={store}>
-        <Layout style={{height: "100%"}}>
-          <Header/>
-
-          <Content>
-            <Flex
-              vertical
-              style={{height: "100%", width: "100%", padding: 16}}
-              align={"center"}
-              justify={"center"}
-              gap={16}
-            >
-              <VideosLayout />
-
-              <CommonControls/>
-            </Flex>
-          </Content>
-        </Layout>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Navigate to="/create" replace />} />
+            <Route path="/create" element={<CreateConference />} />
+            <Route path="/conference/:roomId/join" element={<JoinConference />} />
+            <Route path="/conference/:roomId" element={<Conference />} />
+          </Routes>
+        </Router>
       </Provider>
     </ConfigProvider>
   );

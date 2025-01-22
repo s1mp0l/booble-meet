@@ -1,4 +1,4 @@
-//this is our entry point - run nodemon here!
+// Entry point
 
 require('./socketServer')
 require('./expressRoutes')

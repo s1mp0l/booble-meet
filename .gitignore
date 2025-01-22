@@ -37,3 +37,7 @@ yarn-error.log*
 
 # Vite temporary config files
 frontend/vite.config.ts.timestamp-*
+
+# Backend
+/backend/.env
+/backend/.env.local

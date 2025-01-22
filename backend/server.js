@@ -1,31 +1,44 @@
-//this is where we create the express and socket.io server
-
-const fs = require('fs'); //the file system
+require('dotenv').config();
+const fs = require('fs');
 const https = require('https');
-const http = require('http');
 const express = require('express');
 const cors = require('cors');
+const { Server } = require('socket.io');
 
-const socketio = require('socket.io');
 const app = express();
-app.use(cors()) //this will open our Express API to ANY domain
-app.use(express.static(__dirname+'/public'));
-app.use(express.json()); //this will allow us to parse json in the body with the body parser
 
-// const key = fs.readFileSync('./certs/cert.key'); //for local development https
-// const cert = fs.readFileSync('./certs/cert.crt'); //for local development https
+// CORS настройки
+const corsOptions = {
+    origin: process.env.CLIENT_URL || 'https://localhost:5173',
+    methods: ['GET', 'POST'],
+    credentials: true
+};
 
-// const expressServer = https.createServer({key, cert}, app); //for local development https
-const expressServer = http.createServer({}, app);
-const io = socketio(expressServer,{
-    cors: [
-        'https://localhost:3000',
-        'https://localhost:3001',
-        'https://localhost:3002',
-        'https://www.deploying-javascript.com',
-        // 'http://www.deploying-javascript.com', TEST ONLY
-    ]
-})
+app.use(cors(corsOptions));
+app.use(express.static(__dirname + '/public'));
+app.use(express.json());
 
-expressServer.listen(9000);
-module.exports = { io, expressServer, app };
+const key = fs.readFileSync('./certs/cert.key'); //for local development https
+const cert = fs.readFileSync('./certs/cert.crt'); //for local development https
+
+const port = process.env.PORT || 3001;  // используем порт из .env
+const server = https.createServer({key, cert}, app);
+
+// Настройка Socket.IO с теми же CORS опциями
+const io = new Server(server, {
+    cors: corsOptions,
+    transports: ['websocket', 'polling'],
+    allowUpgrades: true,
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    cookie: false,
+    withCredentials: true,
+    secure: false,
+    rejectUnauthorized: false,
+});
+
+server.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
+
+module.exports = { io, server, app };
