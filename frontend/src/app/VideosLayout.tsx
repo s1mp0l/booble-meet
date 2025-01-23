@@ -12,12 +12,12 @@ const VideosLayout = memo(() => {
     const haveRecordedVideos = useAppSelector(selectHaveRecordedVideos);
   
     return (
-        <VideoGrid>
-            <SelfVideo index={0} />
+      <VideoGrid>
+        <SelfVideo index={0} />
 
-            {isActiveSelfSharedScreen ? <ShareScreenVideo index={1}/> : null}
+        {isActiveSelfSharedScreen ? <ShareScreenVideo index={1}/> : null}
 
-            {haveRecordedVideos ? <RecordedVideo index={2}/> : null}
+        {haveRecordedVideos ? <RecordedVideo index={2}/> : null}
       </VideoGrid>
     )
   })

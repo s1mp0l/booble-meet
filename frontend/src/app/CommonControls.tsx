@@ -4,6 +4,7 @@ import {ShareScreenControls} from "../modules/share-screen/components/ShareScree
 import {SelfVideoControls} from "../modules/webcam-video/components/SelfVideoControls.tsx";
 import {RecorderControls} from "../modules/recorder/components/RecorderControls.tsx";
 import { useIsMobile } from "../modules/layout/hooks/useIsMobile.ts";
+import { EffectsButton } from "../modules/visual-effects/components/EffectsDrawer/EffectsButton.tsx";
 
 const CommonControls = memo(() => {
   const isMobile = useIsMobile();
@@ -16,6 +17,8 @@ const CommonControls = memo(() => {
         <ShareScreenControls/>
 
         <RecorderControls/>
+
+        <EffectsButton />
       </Space>
     </Flex>
   )

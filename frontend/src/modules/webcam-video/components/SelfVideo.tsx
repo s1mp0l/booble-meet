@@ -4,11 +4,12 @@ import {selectAllActiveDevices, setDevices} from "../../devices/store/slice.ts";
 import {getConstraints, getUserMedia} from "../utils/getUserMedia.ts";
 import {selectSelfWebCamVideoStream, setWebCamVideoStream} from "../store/slice.ts";
 import {getDevices} from "../../devices/utils/getDevices.ts";
-import {BodySegmentationCanvas} from "../../face-detection/components/BodySegmentatioCanvas.tsx";
 import {Button} from "antd";
 import {IWithIndex} from "../../layout/model/constants.ts";
 import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
-import {FaceMeshCanvas} from "../../face-detection/components/FaceMeshCanvas.tsx";
+import {FaceMeshCanvas} from "../../visual-effects/components/FaceMeshCanvas.tsx";
+import {BodySegmentationCanvas} from "../../visual-effects/components/BodySegmentatioCanvas.tsx";
+import {selectBackgroundEffect} from "../../visual-effects/store/visualEffectsSlice.ts";
 
 const SelfVideo = memo<IWithIndex>(({index}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -18,9 +19,7 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
   const dispatch = useAppDispatch();
   const devices = useAppSelector(selectAllActiveDevices);
   const constraints = useMemo(() => getConstraints(devices, width, height), [devices, height, width]);
-
-  const [isBackgroundBlurEnabled, setIsBackgroundBlurEnabled] = useState(false);
-
+  const backgroundEffect = useAppSelector(selectBackgroundEffect);
   const videoStream = useAppSelector(selectSelfWebCamVideoStream);
 
   // SET WEBCAM MEDIA STREAM
@@ -72,18 +71,15 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
     })();
   }, [dispatch]);
 
-  const toggleBackgroundBlur = useCallback(() => {
-    setIsBackgroundBlurEnabled(prev => !prev);
-  }, []);
+  const showBackgroundEffect = backgroundEffect.type !== 'none';
 
   return (
-    <div style={{position: 'relative',  height: '100%'}}>
+    <div style={{position: 'relative', height: '100%'}}>
       {cameraError && (
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: 'translate(-50%, -50%)',
           background: 'rgba(0,0,0,0.7)',
           color: 'white',
           padding: '20px',
@@ -101,20 +97,6 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
           </Button>
         </div>
       )}
-      <Button
-        onClick={toggleBackgroundBlur}
-        type={"primary"}
-        danger={isBackgroundBlurEnabled}
-        variant={"solid"}
-        style={{
-          position: 'absolute',
-          top: 10,
-          left: 10,
-          zIndex: 1
-        }}
-      >
-        {isBackgroundBlurEnabled ? 'Отключить размытие фона' : 'Включить размытие фона'}
-      </Button>
 
       <div style={{ transform: 'scale(-1, 1)', height: '100%' }}>
         <video
@@ -126,20 +108,20 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
           autoPlay
           playsInline
           style={{
-            visibility: isBackgroundBlurEnabled ? 'hidden' : 'visible',
-            position: 'absolute'
+            position: 'absolute',
+            visibility: showBackgroundEffect ? 'hidden' : 'visible',
           }}
         />
 
-        {isBackgroundBlurEnabled ? <BodySegmentationCanvas videoRef={videoRef} index={index}/> : null}
-
+        {showBackgroundEffect && <BodySegmentationCanvas index={index}/>}
         <FaceMeshCanvas videoRef={videoRef} index={index}/>
       </div>
     </div>
-  )
-})
+  );
+});
+
 SelfVideo.displayName = "SelfVideo";
 
 export {
   SelfVideo
-}
+};

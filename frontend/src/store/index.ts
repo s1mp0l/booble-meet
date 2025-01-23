@@ -5,6 +5,7 @@ import {recorderSlice} from "../modules/recorder/store/slice.ts";
 import {webCamVideoSlice} from "../modules/webcam-video/store/slice.ts";
 import conferenceReducer from '../modules/conference/store/conferenceSlice';
 import webSocketReducer from '../modules/conference/store/webSocketSlice';
+import visualEffectsReducer from '../modules/visual-effects/store/visualEffectsSlice';
 
 const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ const store = configureStore({
     recorder: recorderSlice.reducer,
     conference: conferenceReducer,
     webSocket: webSocketReducer,
+    visualEffects: visualEffectsReducer
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({
     serializableCheck: false

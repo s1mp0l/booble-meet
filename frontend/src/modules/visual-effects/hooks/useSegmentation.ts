@@ -1,5 +1,5 @@
 import {RefObject, useCallback, useRef} from 'react';
-import {applyBokehEffect, segmentPeople} from '../utils/segmentation.ts';
+import {applyBackgroundEffect, BackgroundEffect} from '../utils/segmentation.ts';
 import {useSegmenter} from './useSegmenter.ts';
 import {useFrameRate} from './useFrameRate.ts';
 import {useAnimationFrame} from './useAnimationFrame.ts';
@@ -8,9 +8,15 @@ interface UseSegmentationProps {
   videoRef: RefObject<HTMLVideoElement>;
   canvasRef: RefObject<HTMLCanvasElement>;
   fps?: number;
+  effect: BackgroundEffect;
 }
 
-export const useSegmentation = ({videoRef, canvasRef, fps = 30}: UseSegmentationProps) => {
+export const useSegmentation = ({
+  videoRef, 
+  canvasRef, 
+  fps = 30,
+  effect
+}: UseSegmentationProps) => {
   const isProcessingRef = useRef(false);
   const {segmenter, isModelLoaded, error} = useSegmenter();
   const {shouldProcessFrame} = useFrameRate({fps});
@@ -31,20 +37,29 @@ export const useSegmentation = ({videoRef, canvasRef, fps = 30}: UseSegmentation
     isProcessingRef.current = true;
 
     try {
-      const segmentation = await segmentPeople(videoRef.current, segmenter);
+      const segmentation = await segmenter.segmentPeople(videoRef.current, {
+        flipHorizontal: true,
+        internalResolution: 'medium',
+        segmentationThreshold: 0.7
+      });
 
       if (!segmentation || segmentation.length === 0) {
         isProcessingRef.current = false;
         return;
       }
 
-      await applyBokehEffect(canvasRef.current, videoRef.current, segmentation[0]);
+      await applyBackgroundEffect(
+        canvasRef.current, 
+        videoRef.current, 
+        segmentation[0],
+        effect
+      );
       isProcessingRef.current = false;
     } catch (err) {
       console.error('Ошибка сегментации:', err);
       isProcessingRef.current = false;
     }
-  }, [videoRef, canvasRef, segmenter, isModelLoaded, shouldProcessFrame]);
+  }, [videoRef, canvasRef, segmenter, isModelLoaded, shouldProcessFrame, effect]);
 
   useAnimationFrame(processFrame);
 

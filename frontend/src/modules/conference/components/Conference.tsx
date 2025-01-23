@@ -6,6 +6,7 @@ import { Layout, Typography, Flex, Alert } from 'antd';
 import { VideosLayout } from '../../../app/VideosLayout';
 import { CommonControls } from '../../../app/CommonControls';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { EffectsDrawer } from '../../visual-effects/components/EffectsDrawer/EffectsDrawer';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -62,6 +63,8 @@ export const Conference: React.FC = () => {
             </Header>
 
             <Content style={{ padding: 24 }}>
+                <EffectsDrawer />
+
                 <Flex
                     vertical
                     style={{ height: '100%' }}
