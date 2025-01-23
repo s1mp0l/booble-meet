@@ -10,17 +10,30 @@ import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
 import {FaceMeshCanvas} from "../../visual-effects/components/FaceMeshCanvas.tsx";
 import {BodySegmentationCanvas} from "../../visual-effects/components/BodySegmentatioCanvas.tsx";
 import {selectBackgroundEffect} from "../../visual-effects/store/visualEffectsSlice.ts";
+import {selectConnectedUsers} from "../../conference/store/conferenceSlice.ts";
 
-const SelfVideo = memo<IWithIndex>(({index}) => {
+interface SelfVideoProps extends IWithIndex {
+  createOffer: (targetUserId: string) => void;
+}
+
+const SelfVideo = memo<SelfVideoProps>(({index, createOffer}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const {width, height} = useVideoGridItemSize(index);
   const [cameraError, setCameraError] = useState<string | null>(null);
-
   const dispatch = useAppDispatch();
   const devices = useAppSelector(selectAllActiveDevices);
   const constraints = useMemo(() => getConstraints(devices, width, height), [devices, height, width]);
   const backgroundEffect = useAppSelector(selectBackgroundEffect);
   const videoStream = useAppSelector(selectSelfWebCamVideoStream);
+  const connectedUsers = useAppSelector(selectConnectedUsers);
+
+  // Инициируем соединение с каждым новым пользователем
+  useEffect(() => {
+    connectedUsers.forEach(user => {
+      console.log("Creating offer for user", user.userId);
+      createOffer(user.userId);
+    });
+  }, [connectedUsers]);
 
   // SET WEBCAM MEDIA STREAM
   useEffect(() => {
@@ -66,7 +79,6 @@ const SelfVideo = memo<IWithIndex>(({index}) => {
   useEffect(() => {
     (async () => {
       const mediaDevices = await getDevices();
-
       dispatch(setDevices(mediaDevices))
     })();
   }, [dispatch]);

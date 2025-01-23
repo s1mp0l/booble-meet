@@ -1,13 +1,36 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { io, Socket } from 'socket.io-client';
-import { wsConnected, wsDisconnected, wsError } from '../store/webSocketSlice';
-import { RootState } from '../../../store';
+import { 
+    wsConnected, 
+    wsDisconnected, 
+    wsError, 
+    selectWebSocketState,
+    setConnectedUsers,
+    addConnectedUser,
+    removeConnectedUser
+} from '../store/conferenceSlice';
+
+// Типы для WebSocket событий
+interface ServerToClientEvents {
+    offerReceived: (offer: RTCSessionDescriptionInit, fromUserId: string) => void;
+    answerReceived: (answer: RTCSessionDescriptionInit, fromUserId: string) => void;
+    iceToClient: (data: { iceCandidate: RTCIceCandidate; fromUserId: string }) => void;
+    userJoined: (user: { username: string; roomId: string; socketId: string; userId: string }) => void;
+    userLeft: (socketId: string) => void;
+    roomUsers: (users: { username: string; roomId: string; socketId: string; userId: string }[]) => void;
+}
+
+interface ClientToServerEvents {
+    newOffer: (data: { offer: RTCSessionDescriptionInit; roomId: string; targetUserId: string }) => void;
+    newAnswer: (data: { answer: RTCSessionDescriptionInit; roomId: string; targetUserId: string }) => void;
+    iceToServer: (data: { iceCandidate: RTCIceCandidate; roomId: string; targetUserId: string }) => void;
+}
 
 export const useWebSocket = (token: string | null) => {
     const dispatch = useDispatch();
-    const socketRef = useRef<Socket | null>(null);
-    const { isConnected, error } = useSelector((state: RootState) => state.webSocket);
+    const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
+    const { isConnected, error } = useSelector(selectWebSocketState);
 
     useEffect(() => {
         if (!token) return;
@@ -46,6 +69,22 @@ export const useWebSocket = (token: string | null) => {
             dispatch(wsDisconnected());
         });
 
+        // События пользователей
+        socket.on('userJoined', (user) => {
+            console.log('User joined:', user);
+            dispatch(addConnectedUser(user));
+        });
+
+        socket.on('userLeft', (socketId) => {
+            console.log('User left:', socketId);
+            dispatch(removeConnectedUser(socketId));
+        });
+
+        socket.on('roomUsers', (users) => {
+            console.log('Room users:', users);
+            dispatch(setConnectedUsers(users));
+        });
+
         // Очистка при размонтировании
         return () => {
             console.log('Cleaning up WebSocket connection');
@@ -58,28 +97,28 @@ export const useWebSocket = (token: string | null) => {
     }, [token, dispatch]);
 
     // Функции для отправки сообщений
-    const sendOffer = (offer: RTCSessionDescriptionInit, roomId: string) => {
+    const sendOffer = (offer: RTCSessionDescriptionInit, roomId: string, targetUserId: string) => {
         if (socketRef.current?.connected) {
-            socketRef.current.emit('newOffer', { offer, roomId });
+            socketRef.current.emit('newOffer', { offer, roomId, targetUserId });
         }
     };
 
-    const sendAnswer = (answer: RTCSessionDescriptionInit, roomId: string) => {
+    const sendAnswer = (answer: RTCSessionDescriptionInit, roomId: string, targetUserId: string) => {
         if (socketRef.current?.connected) {
-            socketRef.current.emit('newAnswer', { answer, roomId });
+            socketRef.current.emit('newAnswer', { answer, roomId, targetUserId });
         }
     };
 
     const sendIceCandidate = (
         iceCandidate: RTCIceCandidate,
         roomId: string,
-        isOfferer: boolean
+        targetUserId: string
     ) => {
         if (socketRef.current?.connected) {
             socketRef.current.emit('iceToServer', {
                 iceCandidate,
                 roomId,
-                isOfferer
+                targetUserId
             });
         }
     };

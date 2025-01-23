@@ -20,6 +20,17 @@ const cleanupRoom = (roomId) => {
     }
 };
 
+// Функция получения пользователей в комнате
+const getRoomUsers = (roomId) => {
+    return connectedUsers.filter(user => user.roomId === roomId);
+};
+
+// Функция получения сокета по userId
+const getSocketByUserId = (userId) => {
+    const user = connectedUsers.find(u => u.userId === userId);
+    return user ? user.socketId : null;
+};
+
 io.on('connection', socket => {
     console.log(socket.id, "has connected")
 
@@ -33,68 +44,84 @@ io.on('connection', socket => {
         return
     }
 
-    const { username, roomId } = decodedData;
+    const { username, roomId, userId } = decodedData;
+
+    // Присоединяем сокет к комнате
+    socket.join(roomId);
+    console.log(`User ${username} (${userId}) joined room ${roomId}`);
 
     // Проверяем, не подключен ли уже пользователь
-    const existingUser = connectedUsers.find(u => u.username === username && u.roomId === roomId)
+    const existingUser = connectedUsers.find(u => u.userId === userId && u.roomId === roomId)
     if (existingUser) {
         existingUser.socketId = socket.id;
     } else {
-        connectedUsers.push({
+        const newUser = {
             socketId: socket.id,
             username,
-            roomId
-        })
-    }
-
-    // Отправляем существующее предложение, если оно есть
-    const offerForThisRoom = allKnownOffers[roomId];
-    if (offerForThisRoom) {
-        socket.emit('existingOffer', offerForThisRoom);
-    }
-
-    socket.on('newAnswer', ({answer, roomId}) => {
-        allKnownOffers[roomId] = {
-            ...allKnownOffers[roomId],
-            answer
+            roomId,
+            userId
         };
+        connectedUsers.push(newUser);
         
-        // Отправляем ответ всем в комнате, кроме отправителя
-        socket.to(roomId).emit('answerReceived', answer);
+        // Отправляем событие о новом пользователе всем в комнате
+        socket.to(roomId).emit('userJoined', newUser);
+    }
+
+    // Отправляем список пользователей в комнате
+    const roomUsers = getRoomUsers(roomId);
+    socket.emit('roomUsers', roomUsers);
+
+    // WebRTC сигналинг
+    socket.on('newOffer', ({ offer, roomId, targetUserId }) => {
+        if (userId === targetUserId) {
+            console.log('Skipping self-offer');
+            return;
+        }
+        console.log(`New offer from ${username} (${userId}) for user ${targetUserId} in room ${roomId}`);
+        const targetSocketId = getSocketByUserId(targetUserId);
+        if (targetSocketId) {
+            socket.to(targetSocketId).emit('offerReceived', offer, userId);
+        }
     });
 
-    socket.on('newOffer', ({offer, roomId}) => {
-        allKnownOffers[roomId] = {
-            offer,
-            offererIceCandidates: [],
-            answer: null,
-            answerIceCandidates: []
-        };
-
-        // Отправляем предложение всем в комнате, кроме отправителя
-        socket.to(roomId).emit('offerReceived', offer);
+    socket.on('newAnswer', ({ answer, roomId, targetUserId }) => {
+        if (userId === targetUserId) {
+            console.log('Skipping self-answer');
+            return;
+        }
+        console.log(`New answer from ${username} (${userId}) for user ${targetUserId} in room ${roomId}`);
+        const targetSocketId = getSocketByUserId(targetUserId);
+        if (targetSocketId) {
+            socket.to(targetSocketId).emit('answerReceived', answer, userId);
+        }
     });
 
-    socket.on('iceToServer', ({iceCandidate, roomId, isOfferer}) => {
-        const offerToUpdate = allKnownOffers[roomId];
-        if (offerToUpdate) {
-            if (isOfferer) {
-                offerToUpdate.offererIceCandidates.push(iceCandidate);
-                socket.to(roomId).emit('iceToClient', iceCandidate);
-            } else {
-                offerToUpdate.answerIceCandidates.push(iceCandidate);
-                socket.to(roomId).emit('iceToClient', iceCandidate);
-            }
+    socket.on('iceToServer', ({ iceCandidate, roomId, targetUserId }) => {
+        console.log(`New ICE candidate from ${username} (${userId}) for user ${targetUserId} in room ${roomId}`);
+        if (userId === targetUserId) {
+            console.log('Skipping self-ice-candidate');
+            return;
+        }
+        const targetSocketId = getSocketByUserId(targetUserId);
+        if (targetSocketId) {
+            socket.to(targetSocketId).emit('iceToClient', {
+                iceCandidate,
+                fromUserId: userId
+            });
         }
     });
 
     socket.on('disconnect', () => {
+        console.log(`User ${username} (${userId}) disconnected from room ${roomId}`);
         const index = connectedUsers.findIndex(u => u.socketId === socket.id);
         if (index !== -1) {
             const disconnectedUser = connectedUsers[index];
             connectedUsers.splice(index, 1);
-            // Проверяем и очищаем комнату после отключения пользователя
             cleanupRoom(disconnectedUser.roomId);
+            
+            // Отправляем событие об отключении пользователя всем в комнате
+            socket.to(roomId).emit('userLeft', socket.id);
         }
+        socket.leave(roomId);
     });
 });

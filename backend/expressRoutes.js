@@ -7,13 +7,13 @@ const clientUrl = process.env.CLIENT_URL;
 
 // Создание новой конференции
 app.post('/conference/create', (req, res) => {
-    const { username } = req.body;
+    const { username, userId } = req.body;
     if (!username) {
         return res.status(400).json({ error: 'Username is required' });
     }
 
     const roomId = uuidv4();
-    const token = jwt.sign({ username, roomId }, linkSecret);
+    const token = jwt.sign({ username, roomId, userId }, linkSecret);
     const conferenceUrl = `${clientUrl}/conference/${roomId}?token=${token}`;
 
     res.json({
@@ -25,20 +25,21 @@ app.post('/conference/create', (req, res) => {
 
 // Присоединение к существующей конференции
 app.post('/conference/join/:roomId', (req, res) => {
-    const { username } = req.body;
+    const { username, userId } = req.body;
     const { roomId } = req.params;
 
     if (!username || !roomId) {
         return res.status(400).json({ error: 'Username and roomId are required' });
     }
 
-    const token = jwt.sign({ username, roomId }, linkSecret);
+    const token = jwt.sign({ username, roomId, userId }, linkSecret);
     const conferenceUrl = `${clientUrl}/conference/${roomId}?token=${token}`;
 
     res.json({
         roomId,
         conferenceUrl,
-        token
+        token,
+        userId
     });
 });
 
