@@ -4,7 +4,7 @@ import {selectAllActiveDevices, setDevices} from "../../devices/store/slice.ts";
 import {getConstraints, getUserMedia} from "../utils/getUserMedia.ts";
 import {selectSelfWebCamVideoStream, setWebCamVideoStream} from "../store/slice.ts";
 import {getDevices} from "../../devices/utils/getDevices.ts";
-import {Button} from "antd";
+import {Button, Space} from "antd";
 import {IWithIndex} from "../../layout/model/constants.ts";
 import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
 import {FaceMeshCanvas} from "../../visual-effects/components/FaceMeshCanvas.tsx";
@@ -27,13 +27,12 @@ const SelfVideo = memo<SelfVideoProps>(({index, createOffer}) => {
   const videoStream = useAppSelector(selectSelfWebCamVideoStream);
   const connectedUsers = useAppSelector(selectConnectedUsers);
 
-  // Инициируем соединение с каждым новым пользователем
-  useEffect(() => {
+  const handleConnect = useCallback(() => {
     connectedUsers.forEach(user => {
       console.log("Creating offer for user", user.userId);
       createOffer(user.userId);
     });
-  }, [connectedUsers]);
+  }, [connectedUsers, createOffer]);
 
   // SET WEBCAM MEDIA STREAM
   useEffect(() => {
@@ -109,6 +108,20 @@ const SelfVideo = memo<SelfVideoProps>(({index, createOffer}) => {
           </Button>
         </div>
       )}
+
+      <Space style={{
+        position: 'absolute',
+        top: '10px',
+        right: '10px',
+        zIndex: 2
+      }}>
+        <Button 
+          onClick={handleConnect}
+          type="primary"
+        >
+          Подключиться
+        </Button>
+      </Space>
 
       <div style={{ transform: 'scale(-1, 1)', height: '100%' }}>
         <video

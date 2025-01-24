@@ -31,6 +31,8 @@ const VideosLayout = memo(() => {
     }));
   }, []);
 
+  console.log("Self video stream:", videoStream);
+
   const { createOffer } = useWebRTC({
     roomId: roomId || '',
     token,

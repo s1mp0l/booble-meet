@@ -17,16 +17,8 @@ export const RemoteVideo = memo<RemoteVideoProps>(({ username, stream, index }) 
         if (videoRef.current && stream) {
             videoRef.current.srcObject = stream;
         }
+        console.log("Setting Remote Stream:", stream);
     }, [stream]);
-
-    // Очищаем ресурсы при размонтировании
-    useEffect(() => {
-        return () => {
-            if (videoRef.current) {
-                videoRef.current.srcObject = null;
-            }
-        };
-    }, []);
 
     return (
         <div style={{ position: 'relative', width, height }}>
