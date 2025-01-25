@@ -2,30 +2,22 @@ import {RefObject, useCallback, useRef} from 'react';
 import * as faceDetection from '@tensorflow-models/face-detection';
 import '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
-import {useFrameRate} from './useFrameRate.ts';
-import {useAnimationFrame} from './useAnimationFrame.ts';
 
 interface UseFaceDetectionProps {
   videoRef: RefObject<HTMLVideoElement>;
-  canvasRef: RefObject<HTMLCanvasElement>;
-  fps?: number;
-  onFaceDetected?: (
-    ctx: CanvasRenderingContext2D,
-    keypoints: faceDetection.Keypoint[],
-    face: faceDetection.Face
-  ) => void;
+}
+
+interface FaceDetectionResult {
+  keypoints: faceDetection.Keypoint[];
+  face: faceDetection.Face;
 }
 
 export const useFaceDetection = ({
   videoRef,
-  canvasRef,
-  fps = 30,
-  onFaceDetected
 }: UseFaceDetectionProps) => {
-  const isProcessingRef = useRef(false);
   const detectorRef = useRef<faceDetection.FaceDetector | null>(null);
   const isInitializedRef = useRef(false);
-  const {shouldProcessFrame} = useFrameRate({fps});
+  const isProcessingRef = useRef(false);
 
   const initializeDetector = useCallback(async () => {
     if (isInitializedRef.current) return;
@@ -47,17 +39,15 @@ export const useFaceDetection = ({
     }
   }, []);
 
-  const processFrame = useCallback(async () => {
+  const detectFace = useCallback(async (): Promise<FaceDetectionResult | null> => {
     if (
       !videoRef.current ||
-      !canvasRef.current ||
       !detectorRef.current ||
       !isInitializedRef.current ||
-      !shouldProcessFrame(performance.now()) ||
       isProcessingRef.current ||
       videoRef.current.readyState !== 4
     ) {
-      return;
+      return null;
     }
 
     isProcessingRef.current = true;
@@ -67,29 +57,28 @@ export const useFaceDetection = ({
         flipHorizontal: false
       });
 
-      const ctx = canvasRef.current.getContext('2d');
-      if (!ctx) return;
+      isProcessingRef.current = false;
 
-      // Очищаем канвас перед отрисовкой
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-      // Если лицо обнаружено и есть callback для отрисовки
-      if (faces.length > 0 && onFaceDetected) {
+      if (faces.length > 0) {
         const face = faces[0];
         if (face.keypoints) {
-          onFaceDetected(ctx, face.keypoints, face);
+          return {
+            keypoints: face.keypoints,
+            face
+          };
         }
       }
+      return null;
     } catch (err) {
       console.error('Ошибка при обработке кадра:', err);
-    } finally {
       isProcessingRef.current = false;
+      return null;
     }
-  }, [videoRef, canvasRef, shouldProcessFrame, onFaceDetected]);
-
-  useAnimationFrame(processFrame);
+  }, [videoRef]);
 
   return {
-    initializeDetector
+    initializeDetector,
+    detectFace,
+    isInitialized: isInitializedRef.current
   };
 };

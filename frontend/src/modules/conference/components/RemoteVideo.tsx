@@ -4,6 +4,7 @@ import { useWebRTC } from '../hooks/useWebRTC';
 import { useAppSelector } from '../../../store/hooks';
 import { selectConferenceState } from '../store/conferenceSlice';
 import { selectSelfWebCamVideoStream } from '../../webcam-video/store/slice';
+import { selectEffectsStream } from '../../visual-effects/store/visualEffectsSlice';
 
 interface RemoteVideoProps {
     username: string;
@@ -30,8 +31,12 @@ export const RemoteVideo = memo<RemoteVideoProps>(({
     const { width, height } = useVideoGridItemSize();
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
     const { roomId } = useAppSelector(selectConferenceState);
-    const canvasStream = useAppSelector(selectSelfWebCamVideoStream);
+    const webCamStream = useAppSelector(selectSelfWebCamVideoStream);
+    const effectsStream = useAppSelector(selectEffectsStream);
     const currentUserId = useAppSelector(state => state.conference.userId) || '';
+
+    // Определяем, какой стрим использовать
+    const streamToShare = effectsStream || webCamStream;
 
     // Определяем, кто должен быть инициатором на основе сравнения userId
     const shouldInitiateConnection = currentUserId > userId;
@@ -46,7 +51,7 @@ export const RemoteVideo = memo<RemoteVideoProps>(({
     const { createOffer, handleOffer, handleAnswer, handleIceCandidate } = useWebRTC({
         roomId: roomId || '',
         targetUserId: userId,
-        canvasStream,
+        canvasStream: streamToShare,
         onRemoteStream: handleRemoteStream,
         sendOffer,
         sendAnswer,
@@ -99,6 +104,7 @@ export const RemoteVideo = memo<RemoteVideoProps>(({
                 ref={videoRef}
                 autoPlay
                 playsInline
+                muted
                 style={{
                     width: '100%',
                     height: '100%',

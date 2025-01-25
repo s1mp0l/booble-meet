@@ -6,9 +6,8 @@ import {selectSelfWebCamVideoStream, setWebCamVideoStream} from "../store/slice.
 import {getDevices} from "../../devices/utils/getDevices.ts";
 import {Button} from "antd";
 import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
-import {FaceMeshCanvas} from "../../visual-effects/components/FaceMeshCanvas.tsx";
-import {BodySegmentationCanvas} from "../../visual-effects/components/BodySegmentatioCanvas.tsx";
-import {selectBackgroundEffect} from "../../visual-effects/store/visualEffectsSlice.ts";
+import {VisualEffectsCanvas} from "../../visual-effects/components/VisualEffectsCanvas";
+import {selectBackgroundEffect, selectFaceMask} from "../../visual-effects/store/visualEffectsSlice.ts";
 
 const SelfVideo = memo(() => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -18,7 +17,10 @@ const SelfVideo = memo(() => {
   const devices = useAppSelector(selectAllActiveDevices);
   const constraints = useMemo(() => getConstraints(devices, width, height), [devices, height, width]);
   const backgroundEffect = useAppSelector(selectBackgroundEffect);
+  const faceMask = useAppSelector(selectFaceMask);
   const videoStream = useAppSelector(selectSelfWebCamVideoStream);
+
+  const hasActiveEffects = backgroundEffect.type !== 'none' || faceMask !== 'none';
 
   // SET WEBCAM MEDIA STREAM
   useEffect(() => {
@@ -68,8 +70,6 @@ const SelfVideo = memo(() => {
     })();
   }, [dispatch]);
 
-  const showBackgroundEffect = backgroundEffect.type !== 'none';
-
   return (
     <div style={{position: 'relative', width, height }}>
       {cameraError && (
@@ -104,14 +104,20 @@ const SelfVideo = memo(() => {
           width={width}
           autoPlay
           playsInline
+          muted
           style={{
             position: 'absolute',
-            visibility: showBackgroundEffect ? 'hidden' : 'visible',
+            visibility: hasActiveEffects ? 'hidden' : 'visible',
           }}
         />
 
-        {showBackgroundEffect && <BodySegmentationCanvas width={width} height={height} />}
-        <FaceMeshCanvas videoRef={videoRef} width={width} height={height} />
+        {hasActiveEffects && (
+          <VisualEffectsCanvas 
+            videoRef={videoRef} 
+            width={width} 
+            height={height}
+          />
+        )}
       </div>
     </div>
   );

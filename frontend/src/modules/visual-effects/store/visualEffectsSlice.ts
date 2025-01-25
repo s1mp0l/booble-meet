@@ -6,12 +6,14 @@ interface VisualEffectsState {
   backgroundEffect: BackgroundEffect;
   faceMask: FaceMaskType | 'none';
   isEffectsDrawerOpen: boolean;
+  effectsStream: MediaStream | null;
 }
 
 const initialState: VisualEffectsState = {
   backgroundEffect: { type: 'none' },
   faceMask: 'none',
-  isEffectsDrawerOpen: false
+  isEffectsDrawerOpen: false,
+  effectsStream: null
 };
 
 const visualEffectsSlice = createSlice({
@@ -30,6 +32,12 @@ const visualEffectsSlice = createSlice({
     disableAllEffects: (state) => {
       state.backgroundEffect = { type: 'none' };
       state.faceMask = 'none';
+    },
+    setEffectsStream: (state, action: PayloadAction<MediaStream | null>) => {
+      if (state.effectsStream) {
+        state.effectsStream.getTracks().forEach(track => track.stop());
+      }
+      state.effectsStream = action.payload;
     }
   }
 });
@@ -38,12 +46,14 @@ export const {
   setBackgroundEffect, 
   setFaceMask, 
   toggleEffectsDrawer,
-  disableAllEffects 
+  disableAllEffects,
+  setEffectsStream
 } = visualEffectsSlice.actions;
 
 // Селекторы
 export const selectBackgroundEffect = (state: RootState) => state.visualEffects.backgroundEffect;
 export const selectFaceMask = (state: RootState) => state.visualEffects.faceMask;
 export const selectIsEffectsDrawerOpen = (state: RootState) => state.visualEffects.isEffectsDrawerOpen;
+export const selectEffectsStream = (state: RootState) => state.visualEffects.effectsStream;
 
 export default visualEffectsSlice.reducer; 
