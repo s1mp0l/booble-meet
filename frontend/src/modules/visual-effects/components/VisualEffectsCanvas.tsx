@@ -50,7 +50,7 @@ export const VisualEffectsCanvas = memo<VisualEffectsCanvasProps>(({
   // Основной цикл отрисовки
   const processFrame = useMemo(() => {
     return async () => {
-      if (!canvasRef.current || !hasActiveEffects || !shouldProcessFrame(performance.now())) {
+      if (!canvasRef.current || !shouldProcessFrame(performance.now())) {
         return;
       }
 
@@ -75,13 +75,12 @@ export const VisualEffectsCanvas = memo<VisualEffectsCanvasProps>(({
       ctx.restore();
     };
   }, [
-    hasActiveEffects, 
     backgroundEffect, 
     currentMask,
     processSegmentation, 
     shouldProcessFrame, 
     drawBaseVideo,
-    drawMask
+    drawMask,
   ]);
 
   // Запускаем цикл анимации
@@ -89,7 +88,7 @@ export const VisualEffectsCanvas = memo<VisualEffectsCanvasProps>(({
 
   // Создаем и обновляем MediaStream из canvas
   useEffect(() => {
-    if (!canvasRef.current || !hasActiveEffects) {
+    if (!canvasRef.current) {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
@@ -117,10 +116,6 @@ export const VisualEffectsCanvas = memo<VisualEffectsCanvasProps>(({
     }
   }, [initializeMask, currentMask]);
 
-  if (!hasActiveEffects) {
-    return null;
-  }
-
   return (
     <canvas
       ref={canvasRef}
@@ -131,6 +126,9 @@ export const VisualEffectsCanvas = memo<VisualEffectsCanvasProps>(({
         top: 0,
         left: 0,
         pointerEvents: 'none',
+        width: '100%',
+        height: '100%',
+        transform: 'scale(-1, 1)',
         objectFit: 'cover',
         zIndex: 100
       }}

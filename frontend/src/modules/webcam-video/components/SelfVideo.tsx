@@ -7,20 +7,15 @@ import {getDevices} from "../../devices/utils/getDevices.ts";
 import {Button} from "antd";
 import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
 import {VisualEffectsCanvas} from "../../visual-effects/components/VisualEffectsCanvas";
-import {selectBackgroundEffect, selectFaceMask} from "../../visual-effects/store/visualEffectsSlice.ts";
 
 const SelfVideo = memo(() => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const {width, height} = useVideoGridItemSize(true); // Всегда первый элемент
+  const {width, height} = useVideoGridItemSize(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const devices = useAppSelector(selectAllActiveDevices);
-  const constraints = useMemo(() => getConstraints(devices, width, height), [devices, height, width]);
-  const backgroundEffect = useAppSelector(selectBackgroundEffect);
-  const faceMask = useAppSelector(selectFaceMask);
+  const constraints = useMemo(() => getConstraints(devices), [devices]);
   const videoStream = useAppSelector(selectSelfWebCamVideoStream);
-
-  const hasActiveEffects = backgroundEffect.type !== 'none' || faceMask !== 'none';
 
   // SET WEBCAM MEDIA STREAM
   useEffect(() => {
@@ -95,30 +90,21 @@ const SelfVideo = memo(() => {
         </div>
       )}
 
-      <div style={{ transform: 'scale(-1, 1)', height: '100%' }}>
-        <video
-          ref={videoRef}
-          className="webcam-video"
-          id="webcam-video-client"
-          height={height}
-          width={width}
-          autoPlay
-          playsInline
-          muted
-          style={{
-            position: 'absolute',
-            visibility: hasActiveEffects ? 'hidden' : 'visible',
-          }}
-        />
+      <video
+        ref={videoRef}
+        style={{ visibility: 'hidden' }}
+        autoPlay
+        muted
+        width={width}
+        height={height}
+        playsInline
+      />
 
-        {hasActiveEffects && (
-          <VisualEffectsCanvas 
-            videoRef={videoRef} 
-            width={width} 
-            height={height}
-          />
-        )}
-      </div>
+      <VisualEffectsCanvas 
+        videoRef={videoRef} 
+        width={width} 
+        height={height}
+      />
     </div>
   );
 });
