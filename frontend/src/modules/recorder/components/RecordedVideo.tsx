@@ -1,13 +1,11 @@
 import {memo, useRef} from "react";
 import {useAppSelector} from "../../../store/hooks.ts";
 import {selectRecordedVideos} from "../store/slice.ts";
-import { IWithIndex } from "../../layout/model/constants.ts";
-import { useVideoGridItemSize } from "../../layout/context/VideoGridContext.ts";
+import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
 
-const RecordedVideo = memo<IWithIndex>(({index}) => {
+const RecordedVideo = memo(() => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const {width, height} = useVideoGridItemSize(index);
-
+  const {width, height} = useVideoGridItemSize();
   const recordedVideosList = useAppSelector(selectRecordedVideos);
 
   const lastRecordedVideo = recordedVideosList[0]

@@ -1,20 +1,19 @@
 import {memo, RefObject, useEffect, useMemo, useRef} from "react";
 import {useFaceDetection} from "../hooks/useFaceDetection.ts";
-import {IWithIndex} from "../../layout/model/constants.ts";
-import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
+import {useAppSelector} from "../../../store/hooks.ts";
+import {selectFaceMask} from "../store/visualEffectsSlice.ts";
 import {createEyeMaskDrawer} from "../utils/faceMasks/eyeMask.ts";
 import {createCoolGuyMask} from "../utils/faceMasks/coolGuyMask.ts";
 import {createMoustacheMask} from "../utils/faceMasks/moustacheMask.ts";
-import {useAppSelector} from "../../../store/hooks.ts";
-import {selectFaceMask} from "../store/visualEffectsSlice.ts";
 
-interface FaceMeshCanvasProps extends IWithIndex {
+interface FaceMeshCanvasProps {
   videoRef: RefObject<HTMLVideoElement>;
+  width: number;
+  height: number;
 }
 
-const FaceMeshCanvas = memo(({videoRef, index}: FaceMeshCanvasProps) => {
+const FaceMeshCanvas = memo(({videoRef, width, height}: FaceMeshCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const {width, height} = useVideoGridItemSize(index);
   const currentMask = useAppSelector(selectFaceMask);
 
   // Создаем функцию отрисовки маски в зависимости от типа

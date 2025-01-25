@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react";
+import { memo } from "react";
 import { VideoGrid } from "../modules/layout/components/VideoGrid";
 import { RecordedVideo } from "../modules/recorder/components/RecordedVideo";
 import { ShareScreenVideo } from "../modules/share-screen/components/ShareScreenVideo";
@@ -8,57 +8,43 @@ import { SelfVideo } from "../modules/webcam-video/components/SelfVideo";
 import { selectHaveRecordedVideos } from "../modules/recorder/store/slice";
 import { selectConnectedUsers, selectConferenceState } from "../modules/conference/store/conferenceSlice";
 import { RemoteVideo } from "../modules/conference/components/RemoteVideo";
-import { useWebRTC } from "../modules/conference/hooks/useWebRTC";
-import { selectSelfWebCamVideoStream } from "../modules/webcam-video/store/slice";
+import { useWebSocket } from "../modules/conference/hooks/useWebSocket";
 
 const VideosLayout = memo(() => {
   const isActiveSelfSharedScreen = useAppSelector(selectIsActiveSelfSharedScreen);
   const haveRecordedVideos = useAppSelector(selectHaveRecordedVideos);
-  const { username: currentUsername, roomId, token } = useAppSelector(selectConferenceState);
+  const { username: currentUsername, token } = useAppSelector(selectConferenceState);
   const connectedUsers = useAppSelector(selectConnectedUsers);
-  const videoStream = useAppSelector(selectSelfWebCamVideoStream);
   
-  // Храним соответствие userId -> MediaStream
-  const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
-
+  // Получаем методы WebSocket
+  const { sendOffer, sendAnswer, sendIceCandidate, registerHandlers } = useWebSocket(token);
+  
   // Фильтруем текущего пользователя из списка
   const remoteUsers = connectedUsers.filter(user => user.username !== currentUsername);
 
-  const handleRemoteStream = useCallback((stream: MediaStream, fromUserId: string) => {
-    setRemoteStreams(prev => ({
-      ...prev,
-      [fromUserId]: stream
-    }));
-  }, []);
-
-  console.log("Self video stream:", videoStream);
-
-  const { createOffer } = useWebRTC({
-    roomId: roomId || '',
-    token,
-    canvasStream: videoStream,
-    onRemoteStream: handleRemoteStream
-  });
-
-  console.log("Remote streams:", remoteStreams);
-
   return (
     <VideoGrid>
-      <SelfVideo index={0} createOffer={createOffer} />
+      <SelfVideo />
 
-      {isActiveSelfSharedScreen ? <ShareScreenVideo index={1}/> : null}
-
-      {haveRecordedVideos ? <RecordedVideo index={2}/> : null}
-      
-      {remoteUsers.map((user, index) => (
+      {remoteUsers.map((user) => (
         <RemoteVideo
           key={user.socketId}
           username={user.username}
           userId={user.userId}
-          stream={remoteStreams[user.userId]}
-          index={3 + index}
+          sendOffer={sendOffer}
+          sendAnswer={sendAnswer}
+          sendIceCandidate={sendIceCandidate}
+          registerHandlers={registerHandlers}
         />
       ))}
+
+      {isActiveSelfSharedScreen && (
+        <ShareScreenVideo />
+      )}
+
+      {haveRecordedVideos && (
+        <RecordedVideo />
+      )}
     </VideoGrid>
   );
 });

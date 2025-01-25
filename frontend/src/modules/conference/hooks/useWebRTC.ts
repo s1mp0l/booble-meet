@@ -1,13 +1,13 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useWebSocket } from './useWebSocket';
-import { useAppSelector } from '../../../store/hooks';
-import { selectConferenceState } from '../store/conferenceSlice';
 
 interface UseWebRTCProps {
     roomId: string;
-    token: string | null;
+    targetUserId: string;
     canvasStream: MediaStream | null;
-    onRemoteStream?: (stream: MediaStream, fromUserId: string) => void;
+    onRemoteStream?: (stream: MediaStream) => void;
+    sendOffer: (offer: RTCSessionDescriptionInit, roomId: string, targetUserId: string) => void;
+    sendAnswer: (answer: RTCSessionDescriptionInit, roomId: string, targetUserId: string) => void;
+    sendIceCandidate: (candidate: RTCIceCandidate, roomId: string, targetUserId: string) => void;
 }
 
 const configuration: RTCConfiguration = {
@@ -17,58 +17,103 @@ const configuration: RTCConfiguration = {
     ]
 };
 
-export const useWebRTC = ({ roomId, token, canvasStream, onRemoteStream }: UseWebRTCProps) => {
+export const useWebRTC = ({ 
+    roomId, 
+    targetUserId,
+    canvasStream, 
+    onRemoteStream,
+    sendOffer,
+    sendAnswer,
+    sendIceCandidate
+}: UseWebRTCProps) => {
     const peerConnection = useRef<RTCPeerConnection | null>(null);
-    const { socket, isConnected, sendOffer, sendAnswer, sendIceCandidate } = useWebSocket(token);
-    const { userId: currentUserId } = useAppSelector(selectConferenceState);
+    const isInitiator = useRef<boolean>(false);
 
     // Инициализация RTCPeerConnection
-    const initializePeerConnection = useCallback((targetUserId: string) => {
-        // Закрываем предыдущее соединение корректно
+    const initializePeerConnection = useCallback(() => {
+        // Закрываем предыдущее соединение, если оно существует
         if (peerConnection.current) {
-            const senders = peerConnection.current.getSenders();
-            senders.forEach(sender => {
-                if (sender.track) {
-                    sender.track.stop();
-                }
-            });
             peerConnection.current.close();
         }
 
-        console.log('Initializing new peer connection for:', targetUserId);
-        peerConnection.current = new RTCPeerConnection(configuration);
+        console.log('Initializing peer connection for:', targetUserId);
+        const newPeerConnection = new RTCPeerConnection(configuration);
 
         // Добавляем треки из canvas stream
         if (canvasStream) {
             console.log('Adding tracks from canvas stream:', canvasStream.getTracks());
             canvasStream.getTracks().forEach(track => {
-                if (peerConnection.current) {
-                    console.log('Adding track:', track.kind, track.readyState);
-                    peerConnection.current.addTrack(track, canvasStream);
+                console.log('Adding track:', track.kind, track.readyState);
+                try {
+                    newPeerConnection.addTrack(track, canvasStream);
+                } catch (error) {
+                    console.error('Error adding track:', error);
                 }
             });
         }
 
         // Обработка ICE кандидатов
-        peerConnection.current.onicecandidate = (event) => {
-            if (event.candidate && targetUserId) {
+        newPeerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
                 sendIceCandidate(event.candidate, roomId, targetUserId);
             }
         };
 
-        // Обработка входящего стрима
-        peerConnection.current.ontrack = (event) => {
-            console.log('Received remote track:', event.streams[0]);
-            if (onRemoteStream && event.streams[0]) {
-                onRemoteStream(event.streams[0], targetUserId || '');
+        // Обработка состояния соединения
+        newPeerConnection.onconnectionstatechange = () => {
+            const state = newPeerConnection.connectionState;
+            console.log(`Connection state with ${targetUserId}:`, state);
+            
+            if (state === 'failed' || state === 'closed') {
+                console.log('Connection failed or closed');
             }
         };
 
-        return peerConnection.current;
-    }, [canvasStream, roomId, sendIceCandidate, onRemoteStream]);
+        // Обработка состояния ICE
+        newPeerConnection.oniceconnectionstatechange = () => {
+            const state = newPeerConnection.iceConnectionState;
+            console.log(`ICE connection state with ${targetUserId}:`, state);
+            
+            if (state === 'failed') {
+                console.log('ICE connection failed');
+            } else if (state === 'connected') {
+                console.log('ICE connection established successfully');
+            }
+        };
 
-    const createOffer = useCallback(async (targetUserId: string) => {
-        const pc = initializePeerConnection(targetUserId);
+        // Обработка изменения состояния согласования
+        newPeerConnection.onsignalingstatechange = () => {
+            const state = newPeerConnection.signalingState;
+            console.log(`Signaling state with ${targetUserId}:`, state);
+            
+            if (state === 'stable') {
+                console.log('Signaling state is stable, connection established');
+            }
+        };
+
+        // Обработка входящего стрима
+        newPeerConnection.ontrack = (event) => {
+            console.log('Received remote track from:', targetUserId, event.streams[0]);
+            if (onRemoteStream && event.streams[0]) {
+                onRemoteStream(event.streams[0]);
+            }
+        };
+
+        // Обработка ошибок согласования
+        newPeerConnection.onicecandidateerror = (event) => {
+            console.error('ICE candidate error:', event);
+        };
+
+        peerConnection.current = newPeerConnection;
+        return newPeerConnection;
+    }, [canvasStream, roomId, targetUserId, sendIceCandidate, onRemoteStream]);
+
+    // Создание оффера
+    const createOffer = useCallback(async () => {
+        console.log('Creating offer for:', targetUserId);
+        isInitiator.current = true;
+        const pc = peerConnection.current || initializePeerConnection();
+        
         try {
             const offer = await pc.createOffer({
                 offerToReceiveAudio: true,
@@ -78,81 +123,109 @@ export const useWebRTC = ({ roomId, token, canvasStream, onRemoteStream }: UseWe
             sendOffer(offer, roomId, targetUserId);
         } catch (error) {
             console.error('Error creating offer:', error);
+            isInitiator.current = false;
         }
-    }, [initializePeerConnection, roomId, sendOffer]);
+    }, [initializePeerConnection, roomId, targetUserId, sendOffer]);
 
-    const handleOffer = useCallback(async (offer: RTCSessionDescriptionInit, fromUserId: string) => {
-        // Игнорируем собственные офферы
-        if (fromUserId === currentUserId) {
-            console.log('Ignoring own offer');
-            return;
-        }
-        console.log('Received offer from:', fromUserId, offer);
-        const pc = initializePeerConnection(fromUserId);
+    // Обработка входящего оффера
+    const handleOffer = useCallback(async (offer: RTCSessionDescriptionInit) => {
+        console.log('Received offer from:', targetUserId);
+        isInitiator.current = false;
+        const pc = peerConnection.current || initializePeerConnection();
+
         try {
-            await pc.setRemoteDescription(new RTCSessionDescription(offer));
+            if (pc.signalingState !== 'stable') {
+                console.log('Signaling state is not stable, rolling back');
+                await Promise.all([
+                    pc.setLocalDescription({type: "rollback"}),
+                    pc.setRemoteDescription(new RTCSessionDescription(offer))
+                ]);
+            } else {
+                await pc.setRemoteDescription(new RTCSessionDescription(offer));
+            }
+            
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            sendAnswer(answer, roomId, fromUserId);
+            sendAnswer(answer, roomId, targetUserId);
         } catch (error) {
             console.error('Error handling offer:', error);
         }
-    }, [initializePeerConnection, roomId, sendAnswer, currentUserId]);
+    }, [initializePeerConnection, roomId, targetUserId, sendAnswer]);
 
-    const handleAnswer = useCallback(async (answer: RTCSessionDescriptionInit, fromUserId: string) => {
-        // Игнорируем собственные ответы
-        if (fromUserId === currentUserId) {
-            console.log('Ignoring own answer');
+    // Обработка входящего ответа
+    const handleAnswer = useCallback(async (answer: RTCSessionDescriptionInit) => {
+        console.log('Received answer from:', targetUserId);
+        const pc = peerConnection.current;
+        
+        if (!pc) {
+            console.error('No peer connection when receiving answer');
             return;
         }
-        console.log('Received answer from:', fromUserId, answer);
+
         try {
-            if (peerConnection.current && peerConnection.current.signalingState !== 'closed') {
-                await peerConnection.current.setRemoteDescription(new RTCSessionDescription(answer));
+            if (pc.signalingState === 'have-local-offer') {
+                await pc.setRemoteDescription(new RTCSessionDescription(answer));
+            } else {
+                console.warn('Unexpected signaling state for answer:', pc.signalingState);
             }
         } catch (error) {
             console.error('Error handling answer:', error);
         }
-    }, [currentUserId]);
+    }, [targetUserId]);
 
-    const handleIceCandidate = useCallback(async ({ iceCandidate, fromUserId }: { iceCandidate: RTCIceCandidate; fromUserId: string }) => {
-        // Игнорируем собственные ICE кандидаты
-        if (fromUserId === currentUserId) {
-            console.log('Ignoring own ICE candidate');
+    // Обработка ICE кандидата
+    const handleIceCandidate = useCallback(async (iceCandidate: RTCIceCandidate) => {
+        console.log('Received ICE candidate for:', targetUserId);
+        const pc = peerConnection.current;
+        
+        if (!pc) {
+            console.error('No peer connection when receiving ICE candidate');
             return;
         }
-        console.log('Received ICE candidate from:', fromUserId, iceCandidate);
+
         try {
-            if (peerConnection.current && peerConnection.current.remoteDescription) {
-                await peerConnection.current.addIceCandidate(iceCandidate);
-            }
+            await pc.addIceCandidate(iceCandidate);
         } catch (error) {
             console.error('Error handling ICE candidate:', error);
         }
-    }, [currentUserId]);
+    }, [targetUserId]);
 
+    // Обновляем треки при изменении canvasStream
     useEffect(() => {
-        if (!socket || !isConnected) return;
+        if (!canvasStream || !peerConnection.current) return;
 
-        // Подписываемся на WebRTC события
-        socket.on('offerReceived', handleOffer);
-        socket.on('answerReceived', handleAnswer);
-        socket.on('iceToClient', handleIceCandidate);
+        const pc = peerConnection.current;
+        const senders = pc.getSenders();
+        canvasStream.getTracks().forEach((track, index) => {
+            const sender = senders[index];
+            if (sender) {
+                sender.replaceTrack(track).catch(error => {
+                    console.error('Error replacing track:', error);
+                });
+            } else {
+                try {
+                    pc.addTrack(track, canvasStream);
+                } catch (error) {
+                    console.error('Error adding new track:', error);
+                }
+            }
+        });
+    }, [canvasStream]);
 
-        // Очистка при размонтировании
+    // Очистка при размонтировании
+    useEffect(() => {
         return () => {
             if (peerConnection.current) {
                 peerConnection.current.close();
                 peerConnection.current = null;
             }
-            socket.off('offerReceived');
-            socket.off('answerReceived');
-            socket.off('iceToClient');
         };
-    }, [socket, isConnected, handleOffer, handleAnswer, handleIceCandidate]);
+    }, []);
 
     return {
         createOffer,
-        peerConnection: peerConnection.current
+        handleOffer,
+        handleAnswer,
+        handleIceCandidate
     };
 }; 

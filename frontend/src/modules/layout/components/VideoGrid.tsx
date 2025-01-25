@@ -1,10 +1,16 @@
-import {CSSProperties, memo, ReactNode} from 'react';
+import {CSSProperties, memo, ReactNode, useState, useCallback} from 'react';
 import {useGridItemDimensions} from '../hooks/useGridItemDimensions.ts';
 import {GAP, LayoutType} from '../model/constants.ts';
 import {VideoGridContext} from '../context/VideoGridContext.ts';
+import {ItemDimensions} from '../types/grid.ts';
+
+const DEFAULT_DIMENSIONS: ItemDimensions = {
+  width: 320,
+  height: 240
+};
 
 interface VideoGridProps {
-  children: (ReactNode | null | undefined)[];
+  children: ReactNode | ReactNode[];
   layoutType?: LayoutType;
   className?: string;
   style?: CSSProperties;
@@ -16,56 +22,59 @@ export const VideoGrid = memo(({
   className,
   style
 }: VideoGridProps) => {
-  // Создаем маппинг реальных индексов к индексам валидных элементов
-  const indexMap = new Map<number, number>();
-  const validChildren = children
-    .map((child, index) => ({child, originalIndex: index}))
-    .filter(({child}) => child != null)
-    .map(({child, originalIndex}, validIndex) => {
-      indexMap.set(originalIndex, validIndex);
-      return child;
-    });
-  
-  const {items, columns, rows} = useGridItemDimensions({
-    itemCount: validChildren.length,
+  // Храним количество элементов
+  const [itemCount, setItemCount] = useState(0);
+
+  // Регистрация элемента
+  const registerItem = useCallback(() => {
+    setItemCount(prev => prev + 1);
+  }, []);
+
+  // Удаление регистрации элемента
+  const unregisterItem = useCallback(() => {
+    setItemCount(prev => prev - 1);
+  }, []);
+
+  // Получаем размеры для текущего количества элементов
+  const { items, columns } = useGridItemDimensions({
+    itemCount: Math.max(itemCount, 1), // Минимум 1 элемент
     layoutType
   });
+
+  // Получение размера для конкретного элемента
+  const getItemSize = useCallback((isFirst: boolean): ItemDimensions => {
+    if (!items.length) {
+      return DEFAULT_DIMENSIONS;
+    }
+
+    // Для spotlight layout первый элемент больше остальных
+    if (layoutType === LayoutType.SPOTLIGHT && itemCount > 1 && isFirst) {
+      return items[0];
+    }
+    return items[layoutType === LayoutType.SPOTLIGHT && itemCount > 1 ? 1 : 0];
+  }, [items, layoutType, itemCount]);
 
   return (
     <VideoGridContext.Provider
       value={{
-        items,
-        columns,
-        rows,
-        layoutType,
-        indexMap
+        registerItem,
+        unregisterItem,
+        getItemSize,
+        layoutType
       }}
     >
       <div
         className={className}
         style={{
           display: 'grid',
-          gridTemplateColumns: layoutType === LayoutType.SPOTLIGHT
-            ? `${items[0].width}px 1fr`
+          gridTemplateColumns: layoutType === LayoutType.SPOTLIGHT && itemCount > 1
+            ? `${items[0]?.width || DEFAULT_DIMENSIONS.width}px 1fr`
             : `repeat(${columns}, 1fr)`,
           gap: GAP,
           ...style
         }}
       >
-        {validChildren.map((child, index) => (
-          <div
-            key={index}
-            style={{
-              width: items[index].width,
-              height: items[index].height,
-              overflow: 'hidden',
-              borderRadius: '8px',
-              backgroundColor: '#1a1a1a'
-            }}
-          >
-            {child}
-          </div>
-        ))}
+        {children}
       </div>
     </VideoGridContext.Provider>
   );

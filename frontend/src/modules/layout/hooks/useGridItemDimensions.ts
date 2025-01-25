@@ -44,11 +44,14 @@ export const useGridItemDimensions = ({
   const {width: windowWidth, height: windowHeight} = useWindowSize();
 
   return useMemo(() => {
+    // Убеждаемся, что у нас есть хотя бы один элемент
+    const safeItemCount = Math.max(itemCount, 1);
+
     // Вычисляем доступное пространство с учетом меню и отступов
     const availableWidth = Math.floor(windowWidth - (CONTAINER_PADDINGS * 2));
     const availableHeight = Math.floor(windowHeight - HEADER_MENU_HEIGHT - BOTTOM_MENU_HEIGHT - (CONTAINER_PADDINGS * 2));
 
-    if (layoutType === LayoutType.SPOTLIGHT && itemCount > 1) {
+    if (layoutType === LayoutType.SPOTLIGHT && safeItemCount > 1) {
       // Для лейаута с одним большим элементом
       const spotlightContainerWidth = Math.floor(Math.min((availableWidth - GAP) * 0.7, MAX_CARD_WIDTH));
       const spotlightContainerHeight = Math.floor(availableHeight - 2 * GAP);
@@ -60,7 +63,7 @@ export const useGridItemDimensions = ({
       );
 
       const smallItemsContainerWidth = Math.floor(availableWidth - spotlight.width - 3 * GAP);
-      const smallItemContainerHeight = Math.floor((availableHeight - ((itemCount - 2) * GAP)) / (itemCount - 1));
+      const smallItemContainerHeight = Math.floor((availableHeight - ((safeItemCount - 2) * GAP)) / (safeItemCount - 1));
       
       const smallItem = calculateAspectRatioFit(
         smallItemsContainerWidth,
@@ -71,16 +74,16 @@ export const useGridItemDimensions = ({
       return {
         items: [
           spotlight,
-          ...Array(itemCount - 1).fill(smallItem)
+          ...Array(safeItemCount - 1).fill(smallItem)
         ],
         columns: 2,
-        rows: itemCount - 1
+        rows: safeItemCount - 1
       };
     } else {
       // Для сетки с одинаковыми элементами
       const maxColumns = Math.floor((availableWidth + GAP) / (MIN_CARD_WIDTH + GAP));
-      const columns = Math.min(Math.ceil(Math.sqrt(itemCount)), maxColumns);
-      const rows = Math.ceil(itemCount / columns);
+      const columns = Math.min(Math.ceil(Math.sqrt(safeItemCount)), maxColumns);
+      const rows = Math.ceil(safeItemCount / columns);
 
       // Вычисляем размеры контейнера для каждого элемента
       const itemContainerWidth = Math.floor((availableWidth - ((columns - 1) * GAP)) / columns);
@@ -100,14 +103,14 @@ export const useGridItemDimensions = ({
           ASPECT_RATIO
         );
         return {
-          items: Array(itemCount).fill(maxItem),
+          items: Array(safeItemCount).fill(maxItem),
           columns,
           rows
         };
       }
 
       return {
-        items: Array(itemCount).fill(item),
+        items: Array(safeItemCount).fill(item),
         columns,
         rows
       };

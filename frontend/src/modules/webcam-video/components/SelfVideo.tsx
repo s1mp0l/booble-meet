@@ -4,35 +4,21 @@ import {selectAllActiveDevices, setDevices} from "../../devices/store/slice.ts";
 import {getConstraints, getUserMedia} from "../utils/getUserMedia.ts";
 import {selectSelfWebCamVideoStream, setWebCamVideoStream} from "../store/slice.ts";
 import {getDevices} from "../../devices/utils/getDevices.ts";
-import {Button, Space} from "antd";
-import {IWithIndex} from "../../layout/model/constants.ts";
+import {Button} from "antd";
 import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
 import {FaceMeshCanvas} from "../../visual-effects/components/FaceMeshCanvas.tsx";
 import {BodySegmentationCanvas} from "../../visual-effects/components/BodySegmentatioCanvas.tsx";
 import {selectBackgroundEffect} from "../../visual-effects/store/visualEffectsSlice.ts";
-import {selectConnectedUsers} from "../../conference/store/conferenceSlice.ts";
 
-interface SelfVideoProps extends IWithIndex {
-  createOffer: (targetUserId: string) => void;
-}
-
-const SelfVideo = memo<SelfVideoProps>(({index, createOffer}) => {
+const SelfVideo = memo(() => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const {width, height} = useVideoGridItemSize(index);
+  const {width, height} = useVideoGridItemSize(true); // Всегда первый элемент
   const [cameraError, setCameraError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const devices = useAppSelector(selectAllActiveDevices);
   const constraints = useMemo(() => getConstraints(devices, width, height), [devices, height, width]);
   const backgroundEffect = useAppSelector(selectBackgroundEffect);
   const videoStream = useAppSelector(selectSelfWebCamVideoStream);
-  const connectedUsers = useAppSelector(selectConnectedUsers);
-
-  const handleConnect = useCallback(() => {
-    connectedUsers.forEach(user => {
-      console.log("Creating offer for user", user.userId);
-      createOffer(user.userId);
-    });
-  }, [connectedUsers, createOffer]);
 
   // SET WEBCAM MEDIA STREAM
   useEffect(() => {
@@ -85,7 +71,7 @@ const SelfVideo = memo<SelfVideoProps>(({index, createOffer}) => {
   const showBackgroundEffect = backgroundEffect.type !== 'none';
 
   return (
-    <div style={{position: 'relative', height: '100%'}}>
+    <div style={{position: 'relative', width, height }}>
       {cameraError && (
         <div style={{
           position: 'absolute',
@@ -109,20 +95,6 @@ const SelfVideo = memo<SelfVideoProps>(({index, createOffer}) => {
         </div>
       )}
 
-      <Space style={{
-        position: 'absolute',
-        top: '10px',
-        right: '10px',
-        zIndex: 2
-      }}>
-        <Button 
-          onClick={handleConnect}
-          type="primary"
-        >
-          Подключиться
-        </Button>
-      </Space>
-
       <div style={{ transform: 'scale(-1, 1)', height: '100%' }}>
         <video
           ref={videoRef}
@@ -138,8 +110,8 @@ const SelfVideo = memo<SelfVideoProps>(({index, createOffer}) => {
           }}
         />
 
-        {showBackgroundEffect && <BodySegmentationCanvas index={index}/>}
-        <FaceMeshCanvas videoRef={videoRef} index={index}/>
+        {showBackgroundEffect && <BodySegmentationCanvas width={width} height={height} />}
+        <FaceMeshCanvas videoRef={videoRef} width={width} height={height} />
       </div>
     </div>
   );

@@ -27,10 +27,20 @@ interface ClientToServerEvents {
     iceToServer: (data: { iceCandidate: RTCIceCandidate; roomId: string; targetUserId: string }) => void;
 }
 
+// Тип для обработчиков WebRTC событий
+type WebRTCHandlers = {
+    [userId: string]: {
+        onOffer: (offer: RTCSessionDescriptionInit) => void;
+        onAnswer: (answer: RTCSessionDescriptionInit) => void;
+        onIceCandidate: (candidate: RTCIceCandidate) => void;
+    }
+}
+
 export const useWebSocket = (token: string | null) => {
     const dispatch = useDispatch();
     const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
     const { isConnected, error } = useSelector(selectWebSocketState);
+    const handlersRef = useRef<WebRTCHandlers>({});
 
     useEffect(() => {
         if (!token) return;
@@ -85,6 +95,31 @@ export const useWebSocket = (token: string | null) => {
             dispatch(setConnectedUsers(users));
         });
 
+        // WebRTC события
+        socket.on('offerReceived', (offer, fromUserId) => {
+            console.log('Received offer from:', fromUserId);
+            const handler = handlersRef.current[fromUserId]?.onOffer;
+            if (handler) {
+                handler(offer);
+            }
+        });
+
+        socket.on('answerReceived', (answer, fromUserId) => {
+            console.log('Received answer from:', fromUserId);
+            const handler = handlersRef.current[fromUserId]?.onAnswer;
+            if (handler) {
+                handler(answer);
+            }
+        });
+
+        socket.on('iceToClient', ({ iceCandidate, fromUserId }) => {
+            console.log('Received ICE candidate from:', fromUserId);
+            const handler = handlersRef.current[fromUserId]?.onIceCandidate;
+            if (handler) {
+                handler(iceCandidate);
+            }
+        });
+
         // Очистка при размонтировании
         return () => {
             console.log('Cleaning up WebSocket connection');
@@ -123,12 +158,25 @@ export const useWebSocket = (token: string | null) => {
         }
     };
 
+    // Регистрация обработчиков для конкретного пользователя
+    const registerHandlers = (userId: string, handlers: {
+        onOffer: (offer: RTCSessionDescriptionInit) => void;
+        onAnswer: (answer: RTCSessionDescriptionInit) => void;
+        onIceCandidate: (candidate: RTCIceCandidate) => void;
+    }) => {
+        handlersRef.current[userId] = handlers;
+        return () => {
+            delete handlersRef.current[userId];
+        };
+    };
+
     return {
         isConnected,
         error,
         socket: socketRef.current,
         sendOffer,
         sendAnswer,
-        sendIceCandidate
+        sendIceCandidate,
+        registerHandlers
     };
 }; 

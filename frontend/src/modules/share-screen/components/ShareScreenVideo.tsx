@@ -1,13 +1,12 @@
 import {memo, useEffect, useRef} from "react";
 import {selectSelfSharedScreenStream} from "../store/slice.ts";
 import {useAppSelector} from "../../../store/hooks.ts";
-import { IWithIndex } from "../../layout/model/constants.ts";
-import { useVideoGridItemSize } from "../../layout/context/VideoGridContext.ts";
+import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
 
-const ShareScreenVideo = memo<IWithIndex>(({index}) => {
+const ShareScreenVideo = memo(() => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStream = useAppSelector(selectSelfSharedScreenStream);
-  const {width, height} = useVideoGridItemSize(index);
+  const {width, height} = useVideoGridItemSize();
   
   useEffect(() => {
     const videoEl = videoRef.current;

@@ -1,13 +1,15 @@
 import {memo, useRef} from 'react';
 import {useSegmentation} from '../hooks/useSegmentation.ts';
-import {useVideoGridItemSize} from '../../layout/context/VideoGridContext.ts';
-import {IWithIndex} from '../../layout/model/constants.ts';
 import {useAppSelector} from '../../../store/hooks.ts';
 import {selectBackgroundEffect} from '../store/visualEffectsSlice.ts';
 
-export const BodySegmentationCanvas = memo<IWithIndex>(({index}) => {
+interface BodySegmentationCanvasProps {
+  width: number;
+  height: number;
+}
+
+export const BodySegmentationCanvas = memo<BodySegmentationCanvasProps>(({width, height}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const {width, height} = useVideoGridItemSize(index);
   const effect = useAppSelector(selectBackgroundEffect);
 
   useSegmentation({
