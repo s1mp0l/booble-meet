@@ -11,6 +11,8 @@ import {
     removeConnectedUser
 } from '../store/conferenceSlice';
 
+const WS_URL = import.meta.env.VITE_WS_URL;
+
 // Типы для WebSocket событий
 interface ServerToClientEvents {
     offerReceived: (offer: RTCSessionDescriptionInit, fromUserId: string) => void;
@@ -48,7 +50,7 @@ export const useWebSocket = (token: string | null) => {
         console.log('Attempting WebSocket connection with token:', token);
 
         // Используем относительный путь, который будет проксироваться через Vite
-        socketRef.current = io('/', {
+        socketRef.current = io(WS_URL, {
             auth: {
                 jwt: token
             },

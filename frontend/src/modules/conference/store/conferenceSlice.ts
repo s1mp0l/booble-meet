@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../../../store';
+import { generateUserId } from '../utils/generateUserId.ts';
 
 interface ConnectedUser {
     username: string;
@@ -35,15 +36,12 @@ const initialState: ConferenceState = {
     connectedUsers: [],
 };
 
-// Функция для генерации userId из username
-const generateUserId = (username: string): string => {
-    return username.toLowerCase().replace(/\s+/g, '_');
-};
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const createConference = createAsyncThunk(
     'conference/create',
     async (username: string) => {
-        const response = await axios.post('/api/conference/create', { 
+        const response = await axios.post(`${API_URL}/conference/create`, { 
             username,
             userId: generateUserId(username)
         });
@@ -54,7 +52,7 @@ export const createConference = createAsyncThunk(
 export const joinConference = createAsyncThunk(
     'conference/join',
     async ({ roomId, username }: { roomId: string; username: string }) => {
-        const response = await axios.post(`/api/conference/join/${roomId}`, { 
+        const response = await axios.post(`${API_URL}/conference/join/${roomId}`, { 
             username,
             userId: generateUserId(username)
         });
