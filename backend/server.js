@@ -1,15 +1,14 @@
 require('dotenv').config();
-const fs = require('fs');
-const https = require('https');
 const express = require('express');
 const cors = require('cors');
 const { Server } = require('socket.io');
+const http = require('http');
 
 const app = express();
 
 // CORS настройки
 const corsOptions = {
-    origin: process.env.CLIENT_URL || 'https://localhost:5173',
+    origin: true,
     methods: ['GET', 'POST'],
     credentials: true
 };
@@ -18,11 +17,8 @@ app.use(cors(corsOptions));
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 
-const key = fs.readFileSync('./certs/cert.key'); //for local development https
-const cert = fs.readFileSync('./certs/cert.crt'); //for local development https
-
-const port = process.env.PORT || 3001;  // используем порт из .env
-const server = https.createServer({key, cert}, app);
+const port = process.env.PORT || 3001;
+const server = http.createServer(app);
 
 // Настройка Socket.IO с теми же CORS опциями
 const io = new Server(server, {
@@ -32,9 +28,7 @@ const io = new Server(server, {
     pingTimeout: 60000,
     pingInterval: 25000,
     cookie: false,
-    withCredentials: true,
-    secure: false,
-    rejectUnauthorized: false,
+    withCredentials: true
 });
 
 server.listen(port, () => {
