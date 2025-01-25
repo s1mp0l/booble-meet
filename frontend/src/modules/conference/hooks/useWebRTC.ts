@@ -29,6 +29,23 @@ export const useWebRTC = ({
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const isInitiator = useRef<boolean>(false);
 
+    // Функция для добавления треков
+    const addTracks = useCallback((pc: RTCPeerConnection, stream: MediaStream) => {
+        const senders = pc.getSenders();
+        const existingTracks = senders.map(sender => sender.track?.id);
+
+        stream.getTracks().forEach(track => {
+            if (!existingTracks.includes(track.id)) {
+                console.log('Adding track:', track.kind, track.readyState);
+                try {
+                    pc.addTrack(track, stream);
+                } catch (error) {
+                    console.error('Error adding track:', error);
+                }
+            }
+        });
+    }, []);
+
     // Инициализация RTCPeerConnection
     const initializePeerConnection = useCallback(() => {
         // Закрываем предыдущее соединение, если оно существует
@@ -39,17 +56,9 @@ export const useWebRTC = ({
         console.log('Initializing peer connection for:', targetUserId);
         const newPeerConnection = new RTCPeerConnection(configuration);
 
-        // Добавляем треки из canvas stream
+        // Добавляем треки из canvas stream если они есть
         if (canvasStream) {
-            console.log('Adding tracks from canvas stream:', canvasStream.getTracks());
-            canvasStream.getTracks().forEach(track => {
-                console.log('Adding track:', track.kind, track.readyState);
-                try {
-                    newPeerConnection.addTrack(track, canvasStream);
-                } catch (error) {
-                    console.error('Error adding track:', error);
-                }
-            });
+            addTracks(newPeerConnection, canvasStream);
         }
 
         // Обработка ICE кандидатов
@@ -106,7 +115,7 @@ export const useWebRTC = ({
 
         peerConnection.current = newPeerConnection;
         return newPeerConnection;
-    }, [canvasStream, roomId, targetUserId, sendIceCandidate, onRemoteStream]);
+    }, [canvasStream, roomId, targetUserId, sendIceCandidate, onRemoteStream, addTracks]);
 
     // Создание оффера
     const createOffer = useCallback(async () => {
@@ -195,22 +204,28 @@ export const useWebRTC = ({
         if (!canvasStream || !peerConnection.current) return;
 
         const pc = peerConnection.current;
-        const senders = pc.getSenders();
-        canvasStream.getTracks().forEach((track, index) => {
-            const sender = senders[index];
-            if (sender) {
-                sender.replaceTrack(track).catch(error => {
-                    console.error('Error replacing track:', error);
-                });
-            } else {
-                try {
-                    pc.addTrack(track, canvasStream);
-                } catch (error) {
-                    console.error('Error adding new track:', error);
-                }
+        // Удаляем старые треки
+        pc.getSenders().forEach(sender => {
+            if (sender.track) {
+                pc.removeTrack(sender);
             }
         });
-    }, [canvasStream]);
+        
+        // Добавляем новые треки
+        addTracks(pc, canvasStream);
+
+        // Если мы инициатор и соединение уже установлено, создаем новый оффер
+        if (isInitiator.current && pc.connectionState === 'connected') {
+            pc.createOffer()
+                .then(offer => pc.setLocalDescription(offer))
+                .then(() => {
+                    if (pc.localDescription) {
+                        sendOffer(pc.localDescription, roomId, targetUserId);
+                    }
+                })
+                .catch(error => console.error('Error updating offer after track change:', error));
+        }
+    }, [canvasStream, addTracks, roomId, targetUserId, sendOffer]);
 
     // Очистка при размонтировании
     useEffect(() => {
