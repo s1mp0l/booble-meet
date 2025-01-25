@@ -5,6 +5,7 @@ import { selectFaceMask, selectBackgroundEffect, setEffectsStream } from "../sto
 import { useFrameRate } from "../hooks/useFrameRate";
 import { useAnimationFrame } from "../hooks/useAnimationFrame";
 import { useDrawFaceMask } from "../hooks/useDrawFaceMask";
+import { selectSelfWebCamVideoStream } from "../../webcam-video/store/slice";
 
 interface VisualEffectsCanvasProps {
   videoRef: RefObject<HTMLVideoElement>;
@@ -23,9 +24,8 @@ export const VisualEffectsCanvas = memo<VisualEffectsCanvasProps>(({
   
   const currentMask = useAppSelector(selectFaceMask);
   const backgroundEffect = useAppSelector(selectBackgroundEffect);
+  const originalStream = useAppSelector(selectSelfWebCamVideoStream);
   const { shouldProcessFrame } = useFrameRate({ fps: 30 });
-
-  const hasActiveEffects = currentMask !== 'none' || backgroundEffect.type !== 'none';
 
   // Функция для отрисовки базового видео
   const drawBaseVideo = useMemo(() => {
@@ -97,9 +97,28 @@ export const VisualEffectsCanvas = memo<VisualEffectsCanvasProps>(({
       return;
     }
 
-    const stream = canvasRef.current.captureStream(30);
-    streamRef.current = stream;
-    dispatch(setEffectsStream(stream));
+    // Получаем видео поток с canvas
+    const canvasStream = canvasRef.current.captureStream(30);
+    
+    // Создаем новый MediaStream
+    const combinedStream = new MediaStream();
+
+    // Добавляем видео трек с canvas
+    const videoTrack = canvasStream.getVideoTracks()[0];
+    if (videoTrack) {
+      combinedStream.addTrack(videoTrack);
+    }
+
+    // Добавляем аудио трек из оригинального потока
+    if (originalStream) {
+      const audioTrack = originalStream.getAudioTracks()[0];
+      if (audioTrack) {
+        combinedStream.addTrack(audioTrack);
+      }
+    }
+
+    streamRef.current = combinedStream;
+    dispatch(setEffectsStream(combinedStream));
 
     return () => {
       if (streamRef.current) {
@@ -107,7 +126,7 @@ export const VisualEffectsCanvas = memo<VisualEffectsCanvasProps>(({
         dispatch(setEffectsStream(null));
       }
     };
-  }, [hasActiveEffects, dispatch]);
+  }, [dispatch, originalStream]);
 
   // Инициализируем маску при изменении типа
   useEffect(() => {
