@@ -1,12 +1,8 @@
 import {useMemo} from 'react';
-import {isMobileByUserAgent} from '../utils/isMobile.ts';
-import {useWindowSize} from './useWindowSize.ts';
-import {MOBILE_MAX_WIDTH} from '../model/constants.ts';
+import {isMobileByUserAgent, isMobileByWidth} from '../utils/isMobile.ts';
 
-export const useIsMobile = (): boolean => {
-  const {width} = useWindowSize();
-  
+export const useIsMobile = (): boolean => {  
   return useMemo(() => {
-    return isMobileByUserAgent() || width <= MOBILE_MAX_WIDTH;
-  }, [width]);
+    return isMobileByUserAgent() || isMobileByWidth();
+  }, []);
 }; 

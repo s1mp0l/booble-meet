@@ -1,4 +1,4 @@
-import {MOBILE_REGEX} from '../model/constants.ts';
+import {MOBILE_MAX_WIDTH, MOBILE_REGEX} from '../model/constants.ts';
 
 export const isMobileByUserAgent = (): boolean => {
   return MOBILE_REGEX.test(navigator.userAgent);
