@@ -92,7 +92,7 @@ const SelfVideo = memo(() => {
 
       <video
         ref={videoRef}
-        style={{ visibility: 'hidden' }}
+        style={{ visibility: 'hidden', objectFit: 'cover', transform: 'scale(-1, 1)' }}
         autoPlay
         muted
         width={width}

@@ -1,6 +1,6 @@
 export const ASPECT_RATIO = 4 / 3;
 export const MIN_CARD_WIDTH = 320;
-export const MAX_CARD_WIDTH = 1280;
+export const MAX_CARD_WIDTH = 600;
 
 export const GAP = 8; // Отступ между карточками
 export const BOTTOM_MENU_HEIGHT = 80;

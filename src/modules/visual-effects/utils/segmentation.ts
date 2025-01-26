@@ -51,7 +51,7 @@ export const applyBackgroundEffect = async (
     // Создаем бинарную маску для человека
     const binaryMask = await bodySegmentation.toBinaryMask(
       segmentation,
-      { r: 255, g: 255, b: 255, a: 0 }, // цвет человека
+      { r: 0, g: 0, b: 0, a: 0 }, // цвет человека
       effect.color // цвет фона
     );
 

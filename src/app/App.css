@@ -42,9 +42,8 @@
   color: #888;
 }
 
-video {
+video, canvas {
   border-radius: var(--default-border-radius);
   background: var(--default-bg);
-  border: var(--default-border);
   overflow: hidden;
 }

@@ -1,4 +1,4 @@
-import { memo, RefObject, useEffect, useMemo, useRef } from "react";
+import { memo, RefObject, useCallback, useEffect, useMemo, useRef } from "react";
 import { useSegmentation } from "../hooks/useSegmentation";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { selectFaceMask, selectBackgroundEffect, setEffectsStream } from "../store/visualEffectsSlice";
@@ -28,11 +28,9 @@ export const VisualEffectsCanvas = memo<VisualEffectsCanvasProps>(({
   const { shouldProcessFrame } = useFrameRate({ fps: 30 });
 
   // Функция для отрисовки базового видео
-  const drawBaseVideo = useMemo(() => {
-    return (ctx: CanvasRenderingContext2D) => {
-      if (!videoRef.current) return;
-      ctx.drawImage(videoRef.current, 0, 0, width, height);
-    };
+  const drawBaseVideo = useCallback((ctx: CanvasRenderingContext2D) => {
+    if (!videoRef.current) return;
+    ctx.drawImage(videoRef.current, 0, 0, width, height);
   }, [videoRef, width, height]);
 
   // Инициализируем отрисовку маски
@@ -141,12 +139,12 @@ export const VisualEffectsCanvas = memo<VisualEffectsCanvasProps>(({
       width={width}
       height={height}
       style={{
+        width: `${width}px`,
+        height: `${height}px`,
         position: 'absolute',
         top: 0,
         left: 0,
         pointerEvents: 'none',
-        width: '100%',
-        height: '100%',
         transform: 'scale(-1, 1)',
         objectFit: 'cover',
         zIndex: 100
