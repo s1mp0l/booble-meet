@@ -27,7 +27,7 @@ export const JoinConference: React.FC = () => {
 
   return (
     <ConferenceFormLayout>
-      <Title level={2} style={{textAlign: 'center', marginBottom: 24}}>
+      <Title level={4} style={{textAlign: 'center', margin: 0, marginBottom: 12}}>
         Присоединиться к конференции
       </Title>
       <Form

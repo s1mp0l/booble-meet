@@ -24,7 +24,7 @@ export const CreateConference: React.FC = () => {
 
   return (
     <ConferenceFormLayout>
-      <Title level={4} style={{textAlign: 'center', marginBottom: 24}}>
+      <Title level={4} style={{textAlign: 'center', margin: 0, marginBottom: 12}}>
         Создать конференцию
       </Title>
       <Form

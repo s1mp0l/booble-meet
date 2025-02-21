@@ -21,13 +21,13 @@ export const ConferenceFormLayout: React.FC<ConferenceFormLayoutProps> = ({
   return (
     <>
       <EffectsDrawer/>
-      
+
       <Layout style={{minHeight: '100vh'}}>
         <Content style={{
           display: 'flex',
-          justifyContent: 'center',
+          justifyContent: isMobile ? 'flex-start' : 'center',
           alignItems: 'center',
-          gap: 16,
+          gap: isMobile ? 8 : 32,
           flexDirection: isMobile ? 'column' : 'row'
         }}>
           <VideoGrid>
