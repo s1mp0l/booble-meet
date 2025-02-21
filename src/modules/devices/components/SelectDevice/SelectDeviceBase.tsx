@@ -33,6 +33,11 @@ const SelectDeviceBase = memo<ISelectDeviceBase>(({
 
   const dispatch = useAppDispatch();
 
+  // Если нет устройств, то не рисуем компонент
+  if (options.length === 0) {
+    return null;
+  }
+
   const onChange = (value: string) => {
     dispatch(setActiveDeviceActionCreator(value));
   }

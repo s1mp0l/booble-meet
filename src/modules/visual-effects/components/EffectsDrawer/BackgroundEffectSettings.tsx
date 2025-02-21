@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Radio, Space, ColorPicker, InputNumber } from 'antd';
+import { Radio, Space, ColorPicker, Slider } from 'antd';
 import type { ColorPickerProps } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { selectBackgroundEffect, setBackgroundEffect } from '../../store/visualEffectsSlice';
@@ -63,22 +63,32 @@ export const BackgroundEffectSettings = memo(() => {
       </Radio.Group>
 
       {backgroundEffect.type === 'color' && (
-        <ColorPicker
-          format="rgb"
-          value={`rgba(${backgroundEffect.color.r}, ${backgroundEffect.color.g}, ${backgroundEffect.color.b}, ${backgroundEffect.color.a / 255})`}
-          onChange={handleColorChange}
-          allowClear={false}
-        />
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <span>Цвет фона:</span>
+          <ColorPicker
+            format="rgb"
+            value={`rgba(${backgroundEffect.color.r}, ${backgroundEffect.color.g}, ${backgroundEffect.color.b}, ${backgroundEffect.color.a / 255})`}
+            onChange={handleColorChange}
+            allowClear={false}
+            size="large"
+          />
+        </Space>
       )}
 
       {backgroundEffect.type === 'bokeh' && (
-        <Space>
+        <Space direction="vertical" style={{ width: '100%' }}>
           <span>Сила размытия:</span>
-          <InputNumber
+          <Slider
             min={1}
             max={20}
             value={backgroundEffect.backgroundBlurAmount}
             onChange={handleBlurAmountChange}
+            tooltip={{ formatter: (value) => `${value}px` }}
+            marks={{
+              1: '1px',
+              10: '10px',
+              20: '20px'
+            }}
           />
         </Space>
       )}
