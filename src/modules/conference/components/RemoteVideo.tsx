@@ -5,6 +5,7 @@ import { useAppSelector } from '../../../store/hooks';
 import { selectConferenceState } from '../store/conferenceSlice';
 import { selectSelfWebCamVideoStream } from '../../webcam-video/store/slice';
 import { selectEffectsStream } from '../../visual-effects/store/visualEffectsSlice';
+import { VideoPlaceholder } from '../../webcam-video/components/VideoPlaceholder';
 
 interface RemoteVideoProps {
     username: string;
@@ -30,6 +31,7 @@ export const RemoteVideo = memo<RemoteVideoProps>(({
     const videoRef = useRef<HTMLVideoElement>(null);
     const { width, height } = useVideoGridItemSize();
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+    const [isVideoEnabled, setIsVideoEnabled] = useState(true);
     const { roomId } = useAppSelector(selectConferenceState);
     const webCamStream = useAppSelector(selectSelfWebCamVideoStream);
     const effectsStream = useAppSelector(selectEffectsStream);
@@ -45,6 +47,15 @@ export const RemoteVideo = memo<RemoteVideoProps>(({
     const handleRemoteStream = useCallback((stream: MediaStream) => {
         console.log('Setting remote stream for:', username);
         setRemoteStream(stream);
+
+        // Добавляем слушатель для отслеживания состояния видеотрека
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+            setIsVideoEnabled(videoTrack.enabled);
+            videoTrack.onmute = () => setIsVideoEnabled(false);
+            videoTrack.onunmute = () => setIsVideoEnabled(true);
+            videoTrack.onended = () => setIsVideoEnabled(false);
+        }
     }, [username]);
 
     // Инициализируем WebRTC
@@ -100,6 +111,9 @@ export const RemoteVideo = memo<RemoteVideoProps>(({
             }}>
                 {username}
             </div>
+            
+            {!isVideoEnabled && <VideoPlaceholder />}
+            
             <video
                 ref={videoRef}
                 autoPlay
@@ -108,6 +122,7 @@ export const RemoteVideo = memo<RemoteVideoProps>(({
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
+                    visibility: isVideoEnabled ? 'visible' : 'hidden'
                 }}
             />
         </div>

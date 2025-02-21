@@ -4,11 +4,13 @@ import {RootState} from "../../../store";
 interface IWebCamVideoSlice {
   selfWebCamVideoStream: MediaStream | null;
   isMuted: boolean;
+  isVideoHidden: boolean;
 }
 
 const initialSlice: IWebCamVideoSlice = {
   selfWebCamVideoStream: null,
   isMuted: false,
+  isVideoHidden: false,
 };
 
 const webCamVideoSlice = createSlice({
@@ -21,15 +23,20 @@ const webCamVideoSlice = createSlice({
     toggleMute: (state) => {
       state.isMuted = !state.isMuted;
     },
+    toggleVideo: (state) => {
+      state.isVideoHidden = !state.isVideoHidden;
+    },
   },
 })
 
 export const selectSelfWebCamVideoStream = (state: RootState) => state.webCamVideo.selfWebCamVideoStream;
 export const selectIsMuted = (state: RootState) => state.webCamVideo.isMuted;
+export const selectIsVideoHidden = (state: RootState) => state.webCamVideo.isVideoHidden;
 
 export const {
   setWebCamVideoStream,
   toggleMute,
+  toggleVideo,
 } = webCamVideoSlice.actions
 
 export {

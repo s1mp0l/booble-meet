@@ -6,6 +6,7 @@ import {RecorderControls} from "../modules/recorder/components/RecorderControls.
 import { useIsMobile } from "../modules/layout/hooks/useIsMobile.ts";
 import { EffectsButton } from "../modules/visual-effects/components/EffectsDrawer/EffectsButton.tsx";
 import { MuteButton } from "../modules/webcam-video/components/MuteButton.tsx";
+import { HideVideoButton } from "../modules/webcam-video/components/HideVideoButton.tsx";
 
 interface ICommonControlsProps {
   inConference?: boolean;
@@ -22,6 +23,8 @@ const CommonControls = memo<ICommonControlsProps>(({
 
       <Space>
         <MuteButton/>
+        
+        <HideVideoButton/>
       
         {inConference && <ShareScreenControls/>}
 

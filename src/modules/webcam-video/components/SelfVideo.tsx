@@ -2,11 +2,12 @@ import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../../store/hooks.ts";
 import {selectAllActiveDevices, setDevices} from "../../devices/store/slice.ts";
 import {getConstraints, getUserMedia} from "../utils/getUserMedia.ts";
-import {selectSelfWebCamVideoStream, setWebCamVideoStream} from "../store/slice.ts";
+import {selectIsVideoHidden, selectSelfWebCamVideoStream, setWebCamVideoStream} from "../store/slice.ts";
 import {getDevices} from "../../devices/utils/getDevices.ts";
 import {Button} from "antd";
 import {useVideoGridItemSize} from "../../layout/context/VideoGridContext.ts";
 import {VisualEffectsCanvas} from "../../visual-effects/components/VisualEffectsCanvas";
+import {VideoPlaceholder} from "./VideoPlaceholder";
 
 const SelfVideo = memo(() => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -16,6 +17,7 @@ const SelfVideo = memo(() => {
   const devices = useAppSelector(selectAllActiveDevices);
   const constraints = useMemo(() => getConstraints(devices), [devices]);
   const videoStream = useAppSelector(selectSelfWebCamVideoStream);
+  const isVideoHidden = useAppSelector(selectIsVideoHidden);
 
   // SET WEBCAM MEDIA STREAM
   useEffect(() => {
@@ -90,9 +92,15 @@ const SelfVideo = memo(() => {
         </div>
       )}
 
+      {isVideoHidden && <VideoPlaceholder />}
+
       <video
         ref={videoRef}
-        style={{ visibility: 'hidden', objectFit: 'cover', transform: 'scale(-1, 1)' }}
+        style={{ 
+          visibility: isVideoHidden ? 'hidden' : 'visible', 
+          objectFit: 'cover', 
+          transform: 'scale(-1, 1)' 
+        }}
         autoPlay
         muted
         width={width}
@@ -100,11 +108,11 @@ const SelfVideo = memo(() => {
         playsInline
       />
 
-      <VisualEffectsCanvas 
+      {!isVideoHidden && <VisualEffectsCanvas 
         videoRef={videoRef} 
         width={width} 
         height={height}
-      />
+      />} 
     </div>
   );
 });
