@@ -1,6 +1,8 @@
 import * as bodySegmentation from '@tensorflow-models/body-segmentation';
 import * as tf from '@tensorflow/tfjs-core';
 import type { BackgroundEffect } from '../model/types';
+import { applyColorEffect } from './backgroundEffects/colorEffect';
+import { applyBokehEffect } from './backgroundEffects/bokehEffect';
 export type { BackgroundEffect };
 
 export const initializeTensorFlow = async () => {
@@ -38,42 +40,32 @@ export const applyBackgroundEffect = async (
   if (!ctx) return;
 
   // Установка размеров canvas равными размерам видео
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = video.width;
+  canvas.height = video.height;
 
-  if (effect.type === 'none') {
-    // Ничего не делаем, оставляем canvas прозрачным
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    return;
-  }
+  // Получаем данные маски сегментации
+  const mask = segmentation.mask;
+  const maskData = await mask.toImageData();
 
-  if (effect.type === 'color') {
-    // Создаем бинарную маску для человека
-    const binaryMask = await bodySegmentation.toBinaryMask(
-      segmentation,
-      { r: 0, g: 0, b: 0, a: 0 }, // цвет человека
-      effect.color // цвет фона
-    );
+  const effectContext = {
+    canvas,
+    video,
+    maskData,
+    width: canvas.width,
+    height: canvas.height
+  };
 
-    // Отрисовка человека поверх фона
-    await bodySegmentation.drawMask(
-      canvas,
-      video,
-      binaryMask,
-      1, // opacity
-      5, // maskBlurAmount
-      false // flipHorizontal
-    );
-  } else {
-    // Применяем эффект боке
-    await bodySegmentation.drawBokehEffect(
-      canvas,
-      video,
-      segmentation,
-      0.5,
-      effect.backgroundBlurAmount,
-      3,
-      false // flipHorizontal
-    );
+  // Просто отрисовываем видео
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  switch (effect.type) {
+    case 'color':
+      applyColorEffect(ctx, effectContext, effect);
+      break;
+    case 'bokeh':
+      applyBokehEffect(ctx, effectContext, effect);
+      break;
+    case 'none':
+      break;
   }
 }; 
