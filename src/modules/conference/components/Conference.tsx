@@ -33,7 +33,7 @@ export const Conference: React.FC = () => {
         gap={16}
       >
         <VideosLayout/>
-        <CommonControls/>
+        <CommonControls inConference />
       </Flex>
     </>
   );

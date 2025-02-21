@@ -3,7 +3,7 @@ import {Alert, Flex, Layout, Typography} from 'antd';
 import {useSelector} from 'react-redux';
 import {RootState} from '../store';
 import BmeetIcon from '/bmeet.svg';
-import {Outlet} from 'react-router-dom';
+import {Outlet, Link} from 'react-router-dom';
 
 const {Header, Content} = Layout;
 const {Title, Text} = Typography;
@@ -16,10 +16,12 @@ export const MainLayout: React.FC = () => {
       <Header style={{padding: '0 20px'}}>
         <Flex justify="space-between" align="center" style={{height: '100%'}}>
           <Flex align="center" gap={8}>
-            <img src={BmeetIcon} alt="Booble Meet Logo" style={{height: '32px'}} />
-            <Title level={4} style={{color: 'white', margin: 0}}>
-              Booble Meet
-            </Title>
+            <Link to="/" style={{display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none'}}>
+              <img src={BmeetIcon} alt="Booble Meet Logo" style={{height: '32px'}} />
+              <Title level={4} style={{color: 'white', margin: 0}}>
+                Booble Meet
+              </Title>
+            </Link>
           </Flex>
           <Flex align="center" gap={16}>
             {username && !isConnected && (

@@ -7,7 +7,13 @@ import { useIsMobile } from "../modules/layout/hooks/useIsMobile.ts";
 import { EffectsButton } from "../modules/visual-effects/components/EffectsDrawer/EffectsButton.tsx";
 import { MuteButton } from "../modules/webcam-video/components/MuteButton.tsx";
 
-const CommonControls = memo(() => {
+interface ICommonControlsProps {
+  inConference?: boolean;
+}
+
+const CommonControls = memo<ICommonControlsProps>(({
+  inConference = false
+}) => {
   const isMobile = useIsMobile();
 
   return (
@@ -17,9 +23,9 @@ const CommonControls = memo(() => {
       <Space>
         <MuteButton/>
       
-        <ShareScreenControls/>
+        {inConference && <ShareScreenControls/>}
 
-        <RecorderControls/>
+        {inConference && <RecorderControls/>}
 
         <EffectsButton />
       </Space>
