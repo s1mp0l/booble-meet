@@ -7,6 +7,7 @@ import { CreateConference } from '../modules/conference/components/CreateConfere
 import { JoinConference } from '../modules/conference/components/JoinConference';
 import { Conference } from '../modules/conference/components/Conference';
 import { ConfigProvider } from 'antd';
+import { MainLayout } from './MainLayout';
 
 function App() {
   return (
@@ -18,10 +19,12 @@ function App() {
       <Provider store={store}>
         <Router>
           <Routes>
-            <Route path="/" element={<Navigate to="/create" replace />} />
-            <Route path="/create" element={<CreateConference />} />
-            <Route path="/conference/:roomId/join" element={<JoinConference />} />
-            <Route path="/conference/:roomId" element={<Conference />} />
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<Navigate to="/create" replace />} />
+              <Route path="/create" element={<CreateConference />} />
+              <Route path="/conference/:roomId/join" element={<JoinConference />} />
+              <Route path="/conference/:roomId" element={<Conference />} />
+            </Route>
           </Routes>
         </Router>
       </Provider>

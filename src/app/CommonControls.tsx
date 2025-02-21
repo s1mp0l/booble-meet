@@ -5,6 +5,7 @@ import {SelfVideoControls} from "../modules/webcam-video/components/SelfVideoCon
 import {RecorderControls} from "../modules/recorder/components/RecorderControls.tsx";
 import { useIsMobile } from "../modules/layout/hooks/useIsMobile.ts";
 import { EffectsButton } from "../modules/visual-effects/components/EffectsDrawer/EffectsButton.tsx";
+import { MuteButton } from "../modules/webcam-video/components/MuteButton.tsx";
 
 const CommonControls = memo(() => {
   const isMobile = useIsMobile();
@@ -14,6 +15,8 @@ const CommonControls = memo(() => {
       {isMobile ? null : <SelfVideoControls/>}
 
       <Space>
+        <MuteButton/>
+      
         <ShareScreenControls/>
 
         <RecorderControls/>
